@@ -1,0 +1,83 @@
+---
+title: "Getting started with networkScore"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with networkScore}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+`networkScore` computes a permutation-test significance score for a
+condition's PCSF network -- either kinase-only, or paired with sensitivity
+data ("golden score"). Every network build goes through `networkGen`, so
+this vignette's chunks aren't run here (they need the real, compiled `PCSF`
+package -- see `networkGen`'s README).
+
+## Kinase-only score
+
+```{r}
+library(networkScore)
+
+# toy_uka: Tercen-style export with columns like "path.Sample", "path.Kinase Name",
+# "path.Median Kinase Statistic", "path.Mean Specificity Score"
+result <- make_golden_score(
+  uka = toy_uka,
+  spec_cutoff = 1.0,
+  perc_cutoffs = c(0.5, 0.7),
+  ppi_network = toy_ppi,
+  b = 1.5,
+  respath = tempfile("kinase_score_"),
+  nperms_network = 20 # small for a quick example; use 50+ for real analyses
+)
+
+result$results
+```
+
+## Golden score (paired kinase + sensitivity)
+
+```{r}
+result_full <- make_golden_score(
+  uka = toy_uka,
+  sens = toy_sens,
+  control = "Control",
+  spec_cutoff = 1.0,
+  perc_cutoffs = c(0.5, 0.7),
+  uka_fam = toy_uka_fam,
+  ppi_network = toy_ppi,
+  b = 1.5,
+  respath = tempfile("golden_score_"),
+  nperms_overlap = 100,
+  nperms_network = 20
+)
+
+result_full$results
+```
+
+## Under the hood: full flattening
+
+Both calls above build, in one parallel batch, every network needed for
+every condition x percentile-cutoff combination: one observed network plus
+`nperms_network` permuted networks per condition. Set a `future` plan before
+calling to get actual parallelism:
+
+```{r}
+future::plan(future::multisession, workers = 4)
+```
+
+Without a plan set, `networkGen::generate_networks_batch()` (which both
+`make_golden_score_full()`/`make_golden_score_kinase()` call internally)
+runs sequentially -- still correct, just not parallel.
+
+## Reading results
+
+`results$results` has one row per condition x perc_cutoff, with
+`score_sig_network` (network-topology significance) and, for the golden
+(paired) path, `score_sig_overlap`/`score_sig_overlap_fam` (kinase/
+sensitivity overlap significance) -- lower means more significant. The run
+also writes diagnostic histograms (one per metric x cutoff, faceted by
+condition -- see [plot_network_metric_hist_facet()]) to
+`<respath>/Network_metrics_plots/`.

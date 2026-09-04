@@ -1,0 +1,36 @@
+Package: networkScore
+Type: Package
+Title: Permutation-Test Significance Scoring for PCSF Networks
+Version: 0.1.0
+Authors@R: person("Dora", "Schuller", email = "dschuller@pamgene.com", role = c("aut", "cre"))
+Description: Computes golden score (paired kinase-activity + sensitivity
+    data) and kinase-only score for a condition, via permutation testing
+    against networks built by networkGen. Depends on networkGen for network
+    generation; owns the network-topology statistics and permutation-testing
+    logic that only scoring needs.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1)
+Imports:
+    networkGen,
+    dplyr,
+    igraph,
+    readr,
+    rlang,
+    tibble,
+    tidyr,
+    stringr,
+    purrr,
+    ggplot2,
+    stats,
+    utils
+Suggests:
+    future,
+    furrr,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
