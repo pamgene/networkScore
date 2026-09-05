@@ -24,18 +24,6 @@ test_that("clean_uka_to_kinograte_full flips sign when control is on the left of
   expect_equal(res$LogFC[res$cell_line == "Treated2"], 1.0) # control on right -> unchanged
 })
 
-test_that("uka_top_kinase filters by specificity then percentile-ranks", {
-  uka <- data.frame(
-    uniprotname = c("K1", "K2", "K3"),
-    LogFC = c(3.0, -1.0, 0.1),
-    `Mean Specificity Score` = c(2.0, 2.0, 0.5),
-    check.names = FALSE
-  )
-  res <- uka_top_kinase(uka, spec_cutoff = 1.0, perc_cutoff = 0, rank_uka_abs = TRUE)
-  expect_equal(sort(res$name), c("K1", "K2")) # K3 dropped by spec_cutoff
-  expect_equal(unique(res$type), "Kinase")
-})
-
 test_that("clean_sens_to_kinograte computes fold-change vs control and can restrict to best_drug_per_target", {
   sens <- data.frame(
     CELL_LINE_NAME = c("Control", "Control", "A", "A"),

@@ -22,8 +22,9 @@
 #' @param generate_fn `networkGen::generate_paired_network` or
 #'   `networkGen::generate_kinase_network`.
 #' @param uka_top_fn Function `(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff) -> uka_filt`
-#'   used to re-filter each permutation's shuffled input (`networkGen::uka_top()`
-#'   or [uka_top_kinase()]).
+#'   used to re-filter each permutation's shuffled input -- both kinase-only
+#'   and paired paths use `networkGen::uka_top()` here, since by this point
+#'   the input has already been cleaned to a common `fscore` column.
 #' @param paired If `TRUE`, every task also carries `sens = spec$sens_filt`.
 #'
 #' @return A list, one element per condition (same order as `condition_specs`):
@@ -172,7 +173,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, respath, perc_cutoffs,
     condition_specs <- purrr::map(todo, function(condition) {
       uka_filt <- uka_parsed %>%
         dplyr::filter(.data$Sample == condition) %>%
-        uka_top_kinase(spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff, cs = cs)
+        networkGen::uka_top(spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff)
       uka_cell_all <- uka_parsed %>% dplyr::filter(.data$Sample == condition)
       list(
         condition = condition, uka_filt = uka_filt, uka_cell_all = uka_cell_all, sens_filt = NULL,
@@ -183,7 +184,11 @@ make_golden_score_kinase <- function(uka, spec_cutoff, respath, perc_cutoffs,
     cond_results <- score_conditions(
       condition_specs, ppi_network = ppi_network, spec_cutoff = spec_cutoff, b = b,
       nPerms = nperms_network, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff,
-      generate_fn = networkGen::generate_kinase_network, uka_top_fn = uka_top_kinase, paired = FALSE
+      generate_fn = networkGen::generate_kinase_network,
+      uka_top_fn = function(x, spec_cutoff, rank_uka_abs, perc_cutoff) {
+        networkGen::uka_top(x, spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff)
+      },
+      paired = FALSE
     )
 
     for (r in cond_results) {

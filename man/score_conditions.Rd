@@ -38,8 +38,9 @@ permutation's shuffled top-hit input.}
 \code{networkGen::generate_kinase_network}.}
 
 \item{uka_top_fn}{Function \verb{(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff) -> uka_filt}
-used to re-filter each permutation's shuffled input (\code{networkGen::uka_top()}
-or \code{\link[=uka_top_kinase]{uka_top_kinase()}}).}
+used to re-filter each permutation's shuffled input -- both kinase-only
+and paired paths use \code{networkGen::uka_top()} here, since by this point
+the input has already been cleaned to a common \code{fscore} column.}
 
 \item{paired}{If \code{TRUE}, every task also carries \code{sens = spec$sens_filt}.}
 }

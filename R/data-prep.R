@@ -114,37 +114,3 @@ clean_sens_to_kinograte <- function(sens, control, zscore = FALSE, del_cell = NU
   sens_clean
 }
 
-#' Filter kinase-activity data to its top hits for the kinase-only analysis
-#'
-#' Sibling of `networkGen::uka_top()`; filters by `spec_cutoff` on the
-#' comparison-selected specificity column directly (rather than a
-#' pre-normalized `fscore` column), then delegates to
-#' `networkGen::percentile_score_fast()`/`percentile_score_noabs()`.
-#'
-#' @param uka Data frame with column `uniprotname`, `LogFC`, and either
-#'   `"Specificity Score"` or `"Mean Specificity Score"` (see `cs`).
-#' @param spec_cutoff Minimum specificity score to keep a row.
-#' @param rank_uka_abs If `TRUE` (default), rank by `abs(LogFC)`; if `FALSE`,
-#'   rank by signed `LogFC`.
-#' @param perc_cutoff Minimum percentile rank (0-1) to keep a row.
-#' @param cs If `TRUE`, use `"Specificity Score"`; if `FALSE` (default), use
-#'   `"Mean Specificity Score"`.
-#'
-#' @return Data frame with columns `name`, `prize`, `type` ("Kinase"), `LogFC`.
-#' @export
-uka_top_kinase <- function(uka, spec_cutoff, rank_uka_abs = TRUE, perc_cutoff, cs = FALSE) {
-  finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
-  uka_filt <- uka %>% dplyr::filter(.data[[finalscore_col]] > spec_cutoff)
-
-  if (rank_uka_abs) {
-    uka_rank <- networkGen::percentile_score_fast(uka_filt, uniprotname, LogFC)
-  } else {
-    uka_rank <- networkGen::percentile_score_noabs(uka_filt, symbol = uniprotname, metric = LogFC, rank_lowest_highest = FALSE)
-  }
-
-  uka_rank %>%
-    dplyr::filter(.data$percentile_score >= perc_cutoff) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(type = "Kinase") %>%
-    dplyr::select("name", prize = "percentile_score", "type", "LogFC")
-}
