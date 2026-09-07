@@ -73,7 +73,7 @@ compute_golden_overlap_scores <- function(uka_filt, sens_filt, uka_cell_all, uka
   )
   vals$score_sig_overlap <- overlap_sig
 
-  temp_overlap_file <- file.path(respath, paste0("temp_overlap_", cell, "_", perc_cutoff, ".txt"))
+  temp_overlap_file <- file.path(respath, paste0("temp_overlap_", cell, perc_suffix(perc_cutoff), ".txt"))
   writeLines(as.character(overlap_sig), temp_overlap_file)
   temp_files <- c(temp_overlap_file)
 
@@ -89,7 +89,7 @@ compute_golden_overlap_scores <- function(uka_filt, sens_filt, uka_cell_all, uka
   )
   vals$score_sig_overlap_fam <- overlap_sig_fam
 
-  temp_overlap_fam_file <- file.path(respath, paste0("temp_overlap_fam_", cell, "_", perc_cutoff, ".txt"))
+  temp_overlap_fam_file <- file.path(respath, paste0("temp_overlap_fam_", cell, perc_suffix(perc_cutoff), ".txt"))
   writeLines(as.character(overlap_sig_fam), temp_overlap_fam_file)
   temp_files <- c(temp_files, temp_overlap_fam_file)
 

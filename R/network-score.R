@@ -196,7 +196,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, respath, perc_cutoffs,
       all_metrics_df <- dplyr::bind_rows(all_metrics_df, r$metrics_df)
       all_obs_metrics_df <- dplyr::bind_rows(all_obs_metrics_df, r$obs_metrics)
 
-      temp_file <- file.path(respath, paste0("temp_network_", r$condition, "_", perc_cutoff, ".txt"))
+      temp_file <- file.path(respath, paste0("temp_network_", r$condition, perc_suffix(perc_cutoff), ".txt"))
       writeLines(c(as.character(r$vals$score_sig_network), as.character(r$vals$score_sig_network_inv)), temp_file)
       temp_files <- c(temp_files, temp_file)
     }
@@ -291,7 +291,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, respath, uka
         all_metrics_df <- dplyr::bind_rows(all_metrics_df, r$metrics_df)
         all_obs_metrics_df <- dplyr::bind_rows(all_obs_metrics_df, r$obs_metrics)
 
-        temp_network_file <- file.path(respath, paste0("temp_network_", cell, "_", perc_cutoff, ".txt"))
+        temp_network_file <- file.path(respath, paste0("temp_network_", cell, perc_suffix(perc_cutoff), ".txt"))
         writeLines(c(as.character(vals$score_sig_network), as.character(vals$score_sig_network_inv)), temp_network_file)
         temp_files <- c(temp_files, temp_network_file)
       } else {

@@ -46,3 +46,24 @@ test_that("reconstruct_golden_score_from_temp and find_missing_golden_score_comb
   missing <- find_missing_golden_score_combinations(respath, conditions = c("condA", "condB"), perc_cutoffs = 0.7)
   expect_equal(missing$condition, "condB")
 })
+
+test_that("perc_suffix omits the suffix for 0 and is vectorized", {
+  expect_equal(perc_suffix(0), "")
+  expect_equal(perc_suffix(0.7), "_0.7")
+  expect_equal(perc_suffix(c(0, 0.7)), c("", "_0.7"))
+})
+
+test_that("reconstruct/find_missing agree with the actual temp filename when perc_cutoff is 0 (no suffix)", {
+  respath <- file.path(tempdir(), "reconstruct_zero_test")
+  unlink(respath, recursive = TRUE)
+  dir.create(respath)
+  # Matches what network-score.R's temp_network_file construction actually
+  # writes for perc_cutoff = 0: no "_0" suffix.
+  writeLines("0.03", file.path(respath, "temp_network_condA.txt"))
+
+  reconstructed <- reconstruct_golden_score_from_temp(respath, conditions = c("condA", "condB"), perc_cutoffs = 0)
+  expect_equal(reconstructed$score_sig_network[reconstructed$condition == "condA"], 0.03)
+
+  missing <- find_missing_golden_score_combinations(respath, conditions = c("condA", "condB"), perc_cutoffs = 0)
+  expect_equal(missing$condition, "condB")
+})

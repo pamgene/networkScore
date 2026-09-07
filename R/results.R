@@ -71,7 +71,7 @@ reconstruct_golden_score_from_temp <- function(respath, conditions, perc_cutoffs
   df$score_sig_network <- NA_real_
 
   for (i in seq_len(nrow(df))) {
-    f <- file.path(respath, paste0("temp_network_", df$condition[i], "_", df$perc_cutoff[i], ".txt"))
+    f <- file.path(respath, paste0("temp_network_", df$condition[i], perc_suffix(df$perc_cutoff[i]), ".txt"))
     if (file.exists(f)) {
       val <- suppressWarnings(as.numeric(readLines(f, n = 1, warn = FALSE)))
       if (!is.na(val)) df$score_sig_network[i] <- val
@@ -89,6 +89,6 @@ reconstruct_golden_score_from_temp <- function(respath, conditions, perc_cutoffs
 #' @export
 find_missing_golden_score_combinations <- function(respath, conditions, perc_cutoffs) {
   df <- expand.grid(condition = conditions, perc_cutoff = perc_cutoffs, stringsAsFactors = FALSE)
-  missing <- !file.exists(file.path(respath, paste0("temp_network_", df$condition, "_", df$perc_cutoff, ".txt")))
+  missing <- !file.exists(file.path(respath, paste0("temp_network_", df$condition, perc_suffix(df$perc_cutoff), ".txt")))
   df[missing, , drop = FALSE]
 }
