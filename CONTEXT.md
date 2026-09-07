@@ -2,9 +2,14 @@
 
 Computes golden score (paired kinase+sensitivity) and kinase-only score for
 a condition, via permutation testing against networks built by `networkGen`.
-See the suite-wide [Context Map](../CONTEXT-MAP.md) for shared vocabulary
-(network-result object, condition, PPI network) and how this package relates
-to the others.
+See the suite-wide [Context Map](../networkGen/CONTEXT-MAP.md) for shared
+vocabulary (network-result object, condition, PPI network) and how this
+package relates to the others -- it lives in `networkGen`'s repo, not this
+one (`DevOpti/` itself just holds many unrelated projects, so the suite-wide
+docs needed a real project to live in, and `networkGen`, as the foundation
+package, was picked). This package's design decisions are recorded there
+too, alongside the others -- e.g. `networkGen/docs/adr/0003-full-flattening-parallelization.md`
+is about this package's parallelization design specifically, not networkGen's.
 
 ## Language
 

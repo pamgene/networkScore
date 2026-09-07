@@ -1,7 +1,9 @@
 #' Score every condition's network significance in one flattened batch
 #'
-#' The core full-flattening engine (see `docs/adr/0003-full-flattening-parallelization.md`
-#' at the `DevOpti` root): builds one flat list of every network build needed
+#' The core full-flattening engine (see `networkGen`'s
+#' `docs/adr/0003-full-flattening-parallelization.md` -- suite-wide ADRs are
+#' filed in `networkGen`'s repo even when, as here, the decision is about
+#' `networkScore`'s own design): builds one flat list of every network build needed
 #' -- one observed + `nPerms` permutation builds, for every condition in
 #' `condition_specs` -- submits it as a single
 #' `networkGen::generate_networks_batch()` call, then regroups the results by

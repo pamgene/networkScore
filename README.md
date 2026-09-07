@@ -3,7 +3,7 @@
 Computes golden score (paired kinase+sensitivity) and kinase-only score for
 a condition, via permutation testing against networks built by
 [`networkGen`](../networkGen). See the suite-wide
-[Context Map](../CONTEXT-MAP.md).
+[Context Map](../networkGen/CONTEXT-MAP.md).
 
 ## Install
 

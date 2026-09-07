@@ -13,7 +13,7 @@
 #' `modularity`/`assortativity` (present as placeholder fields elsewhere in
 #' the pre-migration code, never actually computed) and the `_core`/`_core_inv`
 #' fields the old permutation code read but nothing computed are deliberately
-#' not reproduced here -- see `docs/adr/` at the `DevOpti` root.
+#' not reproduced here -- see `networkGen`'s `docs/adr/`.
 #'
 #' @param network_result A `"networkGen_result"` object (from
 #'   `networkGen::generate_paired_network()` / `generate_kinase_network()`).
