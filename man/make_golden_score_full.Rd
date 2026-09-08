@@ -9,9 +9,9 @@ make_golden_score_full(
   sens,
   control,
   spec_cutoff,
+  perc_cutoff,
   respath,
   uka_fam,
-  perc_cutoffs,
   ppi_network,
   b,
   del_cells = NULL,
@@ -23,7 +23,8 @@ make_golden_score_full(
   nperms_network = 50,
   rank_uka_abs = TRUE,
   balance = FALSE,
-  cs = FALSE
+  cs = FALSE,
+  max_tasks = 500
 )
 }
 \arguments{
@@ -33,18 +34,18 @@ make_golden_score_full(
 
 \item{control}{Control condition name, as it appears in UKA's \code{contrast} column.}
 
-\item{spec_cutoff}{Specificity-score cutoff.}
+\item{spec_cutoff, perc_cutoff}{Numeric vectors -- every combination is
+scored.}
 
-\item{respath}{Base output directory. The actual results go into a
-parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) --
-\code{results.csv}, \code{metrics_permutations.csv}, \code{metrics_observed.csv}, the
-faceted diagnostic histograms, and each cell's observed network
+\item{respath}{Base output directory. Each \verb{(spec_cutoff, perc_cutoff)}
+combination gets its own parameter-encoded subfolder under it (see
+\code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) -- \code{results.csv},
+\code{metrics_permutations.csv}, \code{metrics_observed.csv}, the faceted
+diagnostic histograms, and each cell's observed network
 (\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation networks)
 all land there.}
 
 \item{uka_fam}{Kinase-family lookup table (\code{Kinase_Name}, \code{Kinase_family}), for overlap scoring.}
-
-\item{perc_cutoffs}{Vector of percentile cutoffs to score at.}
 
 \item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
 
@@ -68,10 +69,23 @@ one drug per target.}
 \item{balance}{If \code{TRUE}, lowers the sensitivity percentile cutoff by 0.2 (see \code{networkGen::sens_top()}).}
 
 \item{cs}{If \code{TRUE}, use the per-comparison specificity column.}
+
+\item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)
+if the grid, with permutations, expands to more than this many PCSF
+builds -- a safety guard against an unintentionally huge overnight run,
+not a time estimate (overlap-score permutations are cheap, no PCSF
+calls, and don't count toward this). Raise explicitly if the size is
+actually intended. Default 500.}
 }
 \value{
-A list: \code{results} (one row per cell x perc_cutoff), \code{logs}.
+A list: \code{results} (one row per cell x spec_cutoff x perc_cutoff,
+across every combination's folder), \code{logs}.
 }
 \description{
-Full (paired kinase + sensitivity) golden score analysis
+Unified grid interface, same shape as \code{\link[=make_golden_score_kinase]{make_golden_score_kinase()}}:
+\code{spec_cutoff}/\code{perc_cutoff} are gridded via
+\code{\link[networkGen:build_network_grid]{networkGen::build_network_grid()}}, cells are then restricted to cell
+lines with matching sensitivity data. \code{sens_filt} depends on \verb{(cell, perc_cutoff)} only (sensitivity has no specificity-cutoff concept), so
+it's resolved once per cell after the kinase-side grid is built, not
+gridded independently.
 }

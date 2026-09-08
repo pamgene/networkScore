@@ -7,28 +7,29 @@
 make_golden_score_kinase(
   uka,
   spec_cutoff,
+  perc_cutoff,
   respath,
-  perc_cutoffs,
   ppi_network,
   b,
   nperms_network = 50,
   rank_uka_abs = TRUE,
-  cs = FALSE
+  cs = FALSE,
+  max_tasks = 500
 )
 }
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
 
-\item{spec_cutoff}{Specificity-score cutoff.}
+\item{spec_cutoff, perc_cutoff}{Numeric vectors -- every combination is
+scored.}
 
-\item{respath}{Base output directory. The actual results go into a
-parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) --
-\code{results.csv}, \code{metrics_permutations.csv}, \code{metrics_observed.csv}, the
-faceted diagnostic histograms, and each condition's observed network
+\item{respath}{Base output directory. Each \verb{(spec_cutoff, perc_cutoff)}
+combination gets its own parameter-encoded subfolder under it (see
+\code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) -- \code{results.csv},
+\code{metrics_permutations.csv}, \code{metrics_observed.csv}, the faceted
+diagnostic histograms, and each condition's observed network
 (\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation networks)
 all land there.}
-
-\item{perc_cutoffs}{Vector of percentile cutoffs to score at.}
 
 \item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
 
@@ -39,10 +40,26 @@ all land there.}
 \item{rank_uka_abs}{If \code{TRUE} (default), rank kinase hits by \code{abs(LogFC)}.}
 
 \item{cs}{If \code{TRUE}, use the per-comparison specificity column.}
+
+\item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)
+if the grid, with permutations, expands to more than this many
+networks -- a safety guard against an unintentionally huge overnight
+run, not a time estimate. Raise explicitly if the size is actually
+intended. Default 500.}
 }
 \value{
-A list: \code{results} (one row per condition x perc_cutoff), \code{logs}.
+A list: \code{results} (one row per condition x spec_cutoff x
+perc_cutoff, across every combination's folder), \code{logs}.
 }
 \description{
-Kinase-only golden score analysis
+Unified grid interface -- \code{spec_cutoff}/\code{perc_cutoff} are gridded (every
+combination scored, not just paired elementwise), and conditions come
+from \code{uka} itself, via \code{\link[networkGen:build_network_grid]{networkGen::build_network_grid()}}. No loop over
+parameter combinations happens here or in \code{\link[=score_conditions]{score_conditions()}}; the grid
+is expanded exactly once. The only loop in this function is over the
+resulting \verb{(spec_cutoff, perc_cutoff)} combinations' \emph{output folders}
+(one \code{\link[=prepare_score_run_params]{prepare_score_run_params()}} folder each, with its own
+\code{results.csv}/checkpointing) -- a consequence of every combination
+getting its own folder (see \code{vignette("networkGen")}), not a second grid
+construction.
 }

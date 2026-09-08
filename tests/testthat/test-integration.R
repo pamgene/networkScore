@@ -33,7 +33,7 @@ test_that("make_golden_score_kinase's permutation filtering uses the same column
 
   expect_no_error({
     result <- make_golden_score_kinase(
-      uka = uka, spec_cutoff = 0, respath = respath, perc_cutoffs = 0,
+      uka = uka, spec_cutoff = 0, respath = respath, perc_cutoff = 0,
       ppi_network = NULL, b = 1, nperms_network = 3
     )
   })
@@ -96,9 +96,15 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
   unlink(respath, recursive = TRUE)
   dir.create(respath)
 
+  # Real callers always pass variables here (data frames), never string
+  # literals -- as_label() on a literal includes its quote characters,
+  # which are illegal in a file path. Mirror real usage in the fixture.
+  raw_uka_unused <- "raw_uka_unused"
+  raw_sens_unused <- "raw_sens_unused"
+
   result <- make_golden_score_full(
-    uka = "raw_uka_unused", sens = "raw_sens_unused", control = "DMSO",
-    spec_cutoff = 0, respath = respath, uka_fam = NULL, perc_cutoffs = 0,
+    uka = raw_uka_unused, sens = raw_sens_unused, control = "DMSO",
+    spec_cutoff = 0, respath = respath, uka_fam = NULL, perc_cutoff = 0,
     ppi_network = NULL, b = 1, nperms_network = 3,
     score_overlap = FALSE, score_network = TRUE
   )
@@ -110,4 +116,60 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
   expect_equal(nrow(result$results), 2)
   expect_setequal(result$results$cell, c("cellA", "cellB"))
   expect_true(all(c("score_sig_network", "score_sig_network_inv") %in% colnames(result$results)))
+})
+
+test_that("make_golden_score_kinase gives each (spec_cutoff, perc_cutoff) combination its own output folder", {
+  local_mocked_bindings(
+    generate_kinase_network = function(uka, condition, spec_cutoff, b, write, res.path = NULL) {
+      structure(list(
+        network = igraph::graph_from_data_frame(data.frame(from = "K1", to = "K2"), directed = FALSE),
+        missing_nodes = NULL
+      ), class = "networkGen_result")
+    },
+    .package = "networkGen"
+  )
+
+  uka <- data.frame(
+    `x.Sample` = rep("cond_A", 3),
+    `x.Kinase Name` = c("K1", "K2", "K3"),
+    `x.Median Kinase Statistic` = c(2.0, -1.5, 0.3),
+    `x.Mean Specificity Score` = 2.0,
+    check.names = FALSE
+  )
+
+  respath <- file.path(tempdir(), "integration_kinase_multicombo_test")
+  unlink(respath, recursive = TRUE)
+  dir.create(respath)
+
+  result <- make_golden_score_kinase(
+    uka = uka, spec_cutoff = c(0, 0.5), respath = respath, perc_cutoff = 0,
+    ppi_network = NULL, b = 1, nperms_network = 2
+  )
+
+  # 2 spec_cutoff values -> 2 separate result-writing folders
+  result_files <- list.files(respath, pattern = "^results\\.csv$", recursive = TRUE, full.names = TRUE)
+  expect_length(result_files, 2)
+  expect_equal(nrow(result$results), 2) # 1 condition x 2 spec_cutoff
+})
+
+test_that("make_golden_score_kinase refuses to proceed when the grid (with permutations) exceeds max_tasks", {
+  uka <- data.frame(
+    `x.Sample` = rep(paste0("cond", 1:5), each = 2),
+    `x.Kinase Name` = rep(c("K1", "K2"), 5),
+    `x.Median Kinase Statistic` = 1,
+    `x.Mean Specificity Score` = 2.0,
+    check.names = FALSE
+  )
+
+  respath <- file.path(tempdir(), "integration_kinase_maxtasks_test")
+  unlink(respath, recursive = TRUE)
+  dir.create(respath)
+
+  expect_error(
+    make_golden_score_kinase(
+      uka = uka, spec_cutoff = 0, respath = respath, perc_cutoff = 0,
+      ppi_network = NULL, b = 1, nperms_network = 50, max_tasks = 10
+    ),
+    "max_tasks"
+  )
 })

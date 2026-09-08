@@ -7,32 +7,33 @@
 score_conditions(
   condition_specs,
   ppi_network,
-  spec_cutoff,
   b,
   nPerms,
   rank_uka_abs,
-  perc_cutoff,
   generate_fn,
   uka_top_fn,
-  paired = FALSE,
-  respath = NULL
+  paired = FALSE
 )
 }
 \arguments{
-\item{condition_specs}{A list, one element per condition, each a list
-with: \code{condition} (label), \code{uka_filt} (observed top-hit kinase data
-frame), \code{uka_cell_all} (all kinase-activity rows for this condition, to
-build permutations from), \code{sens_filt} (observed top-hit sensitivity
-data frame, or \code{NULL} for kinase-only), \code{vals_extra} (named list merged
-into this condition's result row, e.g. \code{n_kins}).}
+\item{condition_specs}{A list, one element per \verb{(condition, spec_cutoff, perc_cutoff)} grid cell (e.g. built from \code{networkGen::build_network_grid()}'s
+output), each a list with: \code{condition} (label), \code{spec_cutoff},
+\code{perc_cutoff}, \code{uka_filt} (observed top-hit kinase data frame),
+\code{uka_cell_all} (all kinase-activity rows for this cell, to build
+permutations from), \code{sens_filt} (observed top-hit sensitivity data
+frame, or \code{NULL} for kinase-only), \code{vals_extra} (named list merged into
+this cell's result row, e.g. \code{n_kins}), \code{respath} (folder the observed
+build is written into, or \code{NULL} to not write it -- typically every
+cell sharing a \verb{(spec_cutoff, perc_cutoff)} combination shares one
+folder, from \code{networkGen::prepare_grid_folders()}).}
 
 \item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
 
-\item{spec_cutoff, b}{Passed to the generate function for every build.}
+\item{b}{Passed to the generate function for every build.}
 
-\item{nPerms}{Number of permutations per condition.}
+\item{nPerms}{Number of permutations per cell.}
 
-\item{rank_uka_abs, perc_cutoff}{Passed to \code{uka_top_fn} when building each
+\item{rank_uka_abs}{Passed to \code{uka_top_fn} when building each
 permutation's shuffled top-hit input.}
 
 \item{generate_fn}{\code{networkGen::generate_paired_network} or
@@ -44,20 +45,13 @@ and paired paths use \code{networkGen::uka_top()} here, since by this point
 the input has already been cleaned to a common \code{fscore} column.}
 
 \item{paired}{If \code{TRUE}, every task also carries \code{sens = spec$sens_filt}.}
-
-\item{respath}{If given, the observed build for each condition is written
-(\code{write = TRUE}, \code{res.path = respath}) via \code{\link[networkGen:kinograte_pg_pcsf]{networkGen::kinograte_pg_pcsf()}}'s
-usual \code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv} output -- permutation
-builds are never written regardless (there are typically dozens per
-condition and they're not independently meaningful). \code{NULL} (default):
-no build is written, matching the previous behavior.}
 }
 \value{
-A list, one element per condition (same order as \code{condition_specs}):
-\code{condition}, \code{vals} (result-row values, including \code{obs_network},
-\code{score_sig_network}, \code{obs_network_inv}, \code{score_sig_network_inv}),
-\code{metrics_df} (long-format permutation-value rows), \code{obs_metrics}
-(long-format observed-value rows).
+A list, one element per grid cell (same order as
+\code{condition_specs}): \code{condition}, \code{vals} (result-row values, including
+\code{obs_network}, \code{score_sig_network}, \code{obs_network_inv},
+\code{score_sig_network_inv}), \code{metrics_df} (long-format permutation-value
+rows), \code{obs_metrics} (long-format observed-value rows).
 }
 \description{
 The core full-flattening engine (see \code{networkGen}'s
