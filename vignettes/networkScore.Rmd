@@ -8,30 +8,62 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 `networkScore` computes a permutation-test significance score for a
 condition's PCSF network -- either kinase-only, or paired with sensitivity
-data ("golden score"). Every network build goes through `networkGen`, so
-this vignette's chunks aren't run here (they need the real, compiled `PCSF`
-package -- see `networkGen`'s README).
+data ("golden score"). Every network build goes through `networkGen`
+(see its own vignette, `vignette("networkGen")`, for the underlying
+`prepare_run_params()`/parameter-tracking mechanism this package builds on).
+
+```{r setup}
+library(networkGen)
+library(networkScore)
+```
+
+## A tiny real example
+
+Raw UKA (kinase-activity) data, Tercen-style dotted column names, two
+conditions, 8 real genes sampled from the bundled `ppi_networkv12`:
+
+```{r toy-uka}
+set.seed(1)
+real_genes <- sample(unique(c(ppi_networkv12$head, ppi_networkv12$tail)), 8)
+real_genes
+
+toy_uka <- data.frame(
+  `x.Sample` = rep(c("DrugA_vs_DMSO", "DrugB_vs_DMSO"), each = 8),
+  `x.Kinase Name` = rep(real_genes, 2),
+  `x.Median Kinase Statistic` = c(
+    c(2.5, -2.0, 1.8, -1.5, 1.2, -1.0, 0.8, -0.5),
+    c(-1.8, 2.2, -1.0, 1.5, -0.8, 1.0, -0.5, 0.6)
+  ),
+  `x.Mean Specificity Score` = 2.0,
+  check.names = FALSE
+)
+head(toy_uka)
+```
 
 ## Kinase-only score
 
-```{r}
-library(networkScore)
+`nperms_network` is kept small here (5) for a fast-running example; use 50+
+for a real analysis. `b = 50` clears PCSF's terminal-inclusion threshold for
+this data's percentile-rank-scale prizes (see `vignette("networkGen")`'s
+"Key parameters" section for the `b`/`w` economics):
 
-# toy_uka: Tercen-style export with columns like "path.Sample", "path.Kinase Name",
-# "path.Median Kinase Statistic", "path.Mean Specificity Score"
+```{r kinase-score}
+respath_kinase <- tempfile("kinase_score_")
+dir.create(respath_kinase)
+
 result <- make_golden_score(
   uka = toy_uka,
   spec_cutoff = 1.0,
   perc_cutoffs = c(0.5, 0.7),
-  ppi_network = toy_ppi,
-  b = 1.5,
-  respath = tempfile("kinase_score_"),
-  nperms_network = 20 # small for a quick example; use 50+ for real analyses
+  ppi_network = ppi_networkv12,
+  b = 50,
+  respath = respath_kinase,
+  nperms_network = 5
 )
 
 result$results
@@ -39,45 +71,102 @@ result$results
 
 ## Golden score (paired kinase + sensitivity)
 
-```{r}
+The paired path needs a `contrast` column identifying treatment vs. control
+(`clean_uka_to_kinograte_full()` handles both "X vs control" and "control vs
+X" naming), and raw sensitivity data with a matching `CELL_LINE_NAME` --
+including a `"Control"` row, since sensitivity `LogFC` is computed as
+fold-change relative to it:
+
+```{r toy-paired-data}
+toy_uka_full <- data.frame(
+  `x.contrast` = "DrugA vs Control",
+  `x.Kinase Name` = real_genes,
+  `x.Median Kinase Statistic` = c(2.5, -2.0, 1.8, -1.5, 1.2, -1.0, 0.8, -0.5),
+  `x.Mean Specificity Score` = 2.0,
+  check.names = FALSE
+)
+
+toy_sens <- data.frame(
+  CELL_LINE_NAME = rep(c("DrugA", "Control"), each = 4),
+  TARGET_1 = rep(real_genes[1:4], 2),
+  LN_IC50 = c(-3.5, -1.0, -3.0, -0.8, -1.0, -0.9, -1.0, -0.9)
+)
+
+toy_uka_fam <- data.frame(
+  Kinase_Name = real_genes,
+  Kinase_family = rep(c("FamilyX", "FamilyY"), 4)
+)
+```
+
+```{r golden-score}
+respath_full <- tempfile("golden_score_")
+dir.create(respath_full)
+
 result_full <- make_golden_score(
-  uka = toy_uka,
+  uka = toy_uka_full,
   sens = toy_sens,
   control = "Control",
   spec_cutoff = 1.0,
   perc_cutoffs = c(0.5, 0.7),
   uka_fam = toy_uka_fam,
-  ppi_network = toy_ppi,
-  b = 1.5,
-  respath = tempfile("golden_score_"),
-  nperms_overlap = 100,
-  nperms_network = 20
+  ppi_network = ppi_networkv12,
+  b = 50,
+  respath = respath_full,
+  nperms_overlap = 20,
+  nperms_network = 5
 )
 
 result_full$results
 ```
 
+## Reading results
+
+`result$results` has one row per condition x `perc_cutoff`, with
+`score_sig_network` (network-topology significance) and, for the golden
+(paired) path, `score_sig_overlap`/`score_sig_overlap_fam` (kinase/
+sensitivity overlap significance, individual and family-level) -- lower
+means more significant.
+
+## Output: tracked parameters, plus the observed network
+
+Both calls above go through `networkGen::prepare_run_params()` internally
+(via this package's own `prepare_score_run_params()`, which extends
+`networkGen`'s naming rule with `nperms_network`/`relative_to` -- see
+`vignette("networkGen")`) -- so `respath` above is just a base directory;
+the actual output lands in a parameter-encoded subfolder under it, same as
+any `networkGen` output:
+
+```{r list-output}
+list.files(respath_kinase, recursive = TRUE)
+```
+
+`results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`, and the
+faceted diagnostic histograms (`Network_metrics_plots/<metric>_cutoff<cutoff>.png`
+-- permutation-null-distribution per metric x cutoff, faceted by condition,
+observed value marked with a line) all land there. So does each
+condition's **observed** network -- `nodes`/`edges`/`wc_df` CSVs, written by
+the same `networkGen::kinograte_pg_pcsf()` mechanism `write = TRUE` uses
+directly. Permutation networks (there are `nperms_network` of them per
+condition) are never written -- only the observed build.
+
+For the paired (golden) path, the folder additionally nests under a
+`uka`-named subfolder (since output there depends on both `uka` and `sens`):
+
+```{r list-output-paired}
+list.files(respath_full, recursive = TRUE)
+```
+
 ## Under the hood: full flattening
 
-Both calls above build, in one parallel batch, every network needed for
-every condition x percentile-cutoff combination: one observed network plus
-`nperms_network` permuted networks per condition. Set a `future` plan before
-calling to get actual parallelism:
+Both calls above build, in one parallel batch (per `perc_cutoff`), every
+network needed for every condition: one observed network plus
+`nperms_network` permuted networks per condition. Set a `future` plan
+before calling to get actual parallelism:
 
-```{r}
+```{r batch-plan, eval = FALSE}
 future::plan(future::multisession, workers = 4)
 ```
 
 Without a plan set, `networkGen::generate_networks_batch()` (which both
-`make_golden_score_full()`/`make_golden_score_kinase()` call internally)
-runs sequentially -- still correct, just not parallel.
-
-## Reading results
-
-`results$results` has one row per condition x perc_cutoff, with
-`score_sig_network` (network-topology significance) and, for the golden
-(paired) path, `score_sig_overlap`/`score_sig_overlap_fam` (kinase/
-sensitivity overlap significance) -- lower means more significant. The run
-also writes diagnostic histograms (one per metric x cutoff, faceted by
-condition -- see [plot_network_metric_hist_facet()]) to
-`<respath>/Network_metrics_plots/`.
+`make_golden_score_full()`/`make_golden_score_kinase()` call internally, via
+`score_conditions()`) runs sequentially -- still correct, just not parallel.
