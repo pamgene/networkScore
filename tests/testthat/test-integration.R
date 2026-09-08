@@ -10,7 +10,7 @@
 # caught by the regular test suite going forward.
 test_that("make_golden_score_kinase's permutation filtering uses the same column contract as the cleaned data it's given", {
   local_mocked_bindings(
-    generate_kinase_network = function(uka, condition, spec_cutoff, b, write) {
+    generate_kinase_network = function(uka, condition, spec_cutoff, b, write, res.path = NULL) {
       structure(list(
         network = igraph::graph_from_data_frame(data.frame(from = uka$name[1], to = uka$name[min(2, nrow(uka))]), directed = FALSE),
         missing_nodes = NULL
@@ -39,5 +39,75 @@ test_that("make_golden_score_kinase's permutation filtering uses the same column
   })
 
   expect_equal(nrow(result$results), 2)
+  expect_true(all(c("score_sig_network", "score_sig_network_inv") %in% colnames(result$results)))
+})
+
+# Regression test for Candidate D (score_conditions() caller duplication,
+# see DevOpti/networkGen/docs/adr and the codebase-architecture review):
+# make_golden_score_full() used to build a one-cell condition_specs list
+# inside its per-cell loop and call score_conditions() once per cell,
+# defeating full flattening (ADR 0003) for the paired path even though
+# make_golden_score_kinase() already did this correctly. Fixed by building
+# every todo cell's inputs up front and submitting one score_conditions()
+# call spanning all of them, per perc_cutoff -- this test locks that in by
+# counting generate_networks_batch() calls and each call's task-list size
+# directly, rather than only checking the final results (which would look
+# identical either way).
+test_that("make_golden_score_full batches all cells' network-score builds into a single generate_networks_batch call per perc_cutoff (full flattening)", {
+  cleaned_uka <- data.frame(
+    cell_line = rep(c("cellA", "cellB"), each = 3),
+    uniprotname = rep(c("K1", "K2", "K3"), 2),
+    LogFC = c(2.0, -1.5, 0.3, 1.8, -1.2, 0.1),
+    fscore = 2.0
+  )
+  cleaned_sens <- data.frame(
+    cell_line = rep(c("cellA", "cellB"), each = 2),
+    uniprotname = rep(c("T1", "T2"), 2),
+    LogFC = c(1.0, 0.5, 1.0, 0.5)
+  )
+
+  local_mocked_bindings(
+    clean_uka_to_kinograte_full = function(uka, spec_cutoff, control, cs = FALSE) cleaned_uka,
+    clean_sens_to_kinograte = function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) cleaned_sens,
+    .package = "networkScore"
+  )
+
+  batch_calls <- list()
+  local_mocked_bindings(
+    generate_networks_batch = function(tasks, generate_fn, ppi_network, extra_args = list(), progress = FALSE) {
+      batch_calls[[length(batch_calls) + 1]] <<- length(tasks)
+      lapply(tasks, function(task) {
+        tight <- identical(task$meta$role, "observed")
+        n <- if (tight) 2 else 12
+        edges <- data.frame(from = paste0("N", seq_len(n - 1)), to = paste0("N", seq_len(n - 1) + 1))
+        list(
+          result = structure(list(
+            network = igraph::graph_from_data_frame(edges, directed = FALSE),
+            missing_nodes = NULL
+          ), class = "networkGen_result"),
+          meta = task$meta
+        )
+      })
+    },
+    .package = "networkGen"
+  )
+
+  respath <- file.path(tempdir(), "integration_full_test")
+  unlink(respath, recursive = TRUE)
+  dir.create(respath)
+
+  result <- make_golden_score_full(
+    uka = "raw_uka_unused", sens = "raw_sens_unused", control = "DMSO",
+    spec_cutoff = 0, respath = respath, uka_fam = NULL, perc_cutoffs = 0,
+    ppi_network = NULL, b = 1, nperms_network = 3,
+    score_overlap = FALSE, score_network = TRUE
+  )
+
+  # 2 cells x (1 observed + 3 permutations) = 8 tasks, in ONE batch call --
+  # not two separate 4-task calls (the pre-fix behavior).
+  expect_equal(batch_calls, list(8))
+
+  expect_equal(nrow(result$results), 2)
+  expect_setequal(result$results$cell, c("cellA", "cellB"))
   expect_true(all(c("score_sig_network", "score_sig_network_inv") %in% colnames(result$results)))
 })

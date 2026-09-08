@@ -35,7 +35,12 @@ make_golden_score_full(
 
 \item{spec_cutoff}{Specificity-score cutoff.}
 
-\item{respath}{Results folder.}
+\item{respath}{Base output directory. The actual results go into a
+parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) --
+\code{results.csv}, \code{metrics_permutations.csv}, \code{metrics_observed.csv}, the
+faceted diagnostic histograms, and each cell's observed network
+(\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation networks)
+all land there.}
 
 \item{uka_fam}{Kinase-family lookup table (\code{Kinase_Name}, \code{Kinase_family}), for overlap scoring.}
 

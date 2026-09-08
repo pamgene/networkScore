@@ -14,7 +14,8 @@ score_conditions(
   perc_cutoff,
   generate_fn,
   uka_top_fn,
-  paired = FALSE
+  paired = FALSE,
+  respath = NULL
 )
 }
 \arguments{
@@ -43,6 +44,13 @@ and paired paths use \code{networkGen::uka_top()} here, since by this point
 the input has already been cleaned to a common \code{fscore} column.}
 
 \item{paired}{If \code{TRUE}, every task also carries \code{sens = spec$sens_filt}.}
+
+\item{respath}{If given, the observed build for each condition is written
+(\code{write = TRUE}, \code{res.path = respath}) via \code{\link[networkGen:kinograte_pg_pcsf]{networkGen::kinograte_pg_pcsf()}}'s
+usual \code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv} output -- permutation
+builds are never written regardless (there are typically dozens per
+condition and they're not independently meaningful). \code{NULL} (default):
+no build is written, matching the previous behavior.}
 }
 \value{
 A list, one element per condition (same order as \code{condition_specs}):
@@ -52,8 +60,10 @@ A list, one element per condition (same order as \code{condition_specs}):
 (long-format observed-value rows).
 }
 \description{
-The core full-flattening engine (see \code{docs/adr/0003-full-flattening-parallelization.md}
-at the \code{DevOpti} root): builds one flat list of every network build needed
+The core full-flattening engine (see \code{networkGen}'s
+\code{docs/adr/0003-full-flattening-parallelization.md} -- suite-wide ADRs are
+filed in \code{networkGen}'s repo even when, as here, the decision is about
+\code{networkScore}'s own design): builds one flat list of every network build needed
 -- one observed + \code{nPerms} permutation builds, for every condition in
 \code{condition_specs} -- submits it as a single
 \code{networkGen::generate_networks_batch()} call, then regroups the results by

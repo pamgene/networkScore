@@ -34,5 +34,5 @@ both).
 \code{modularity}/\code{assortativity} (present as placeholder fields elsewhere in
 the pre-migration code, never actually computed) and the \verb{_core}/\verb{_core_inv}
 fields the old permutation code read but nothing computed are deliberately
-not reproduced here -- see \verb{docs/adr/} at the \code{DevOpti} root.
+not reproduced here -- see \code{networkGen}'s \verb{docs/adr/}.
 }

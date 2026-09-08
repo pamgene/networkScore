@@ -71,6 +71,48 @@ test_that("score_conditions returns NA significance when every permutation build
   expect_true(is.na(results[[1]]$vals$score_sig_network))
 })
 
+test_that("score_conditions writes the observed build (write=TRUE, res.path=respath) but never a permutation build", {
+  captured_calls <- list()
+  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, write, res.path = NULL, sens = NULL) {
+    captured_calls[[length(captured_calls) + 1]] <<- list(tight = isTRUE(uka$prize[1] == 1), write = write, res.path = res.path)
+    mock_generate_fn(uka, condition, spec_cutoff, b, write, sens)
+  }
+
+  score_conditions(
+    list(make_spec("cond_A")), ppi_network = NULL, spec_cutoff = 0, b = 1, nPerms = 3,
+    rank_uka_abs = TRUE, perc_cutoff = 0,
+    generate_fn = capturing_generate_fn, uka_top_fn = mock_uka_top_fn, paired = FALSE,
+    respath = "some/output/path"
+  )
+
+  observed_calls <- Filter(function(c) c$tight, captured_calls)
+  perm_calls <- Filter(function(c) !c$tight, captured_calls)
+
+  expect_length(observed_calls, 1)
+  expect_true(observed_calls[[1]]$write)
+  expect_equal(observed_calls[[1]]$res.path, "some/output/path")
+
+  expect_length(perm_calls, 3)
+  expect_true(all(!vapply(perm_calls, `[[`, logical(1), "write")))
+  expect_true(all(vapply(perm_calls, function(c) is.null(c$res.path), logical(1))))
+})
+
+test_that("score_conditions never writes any build when respath is not given (default, matches previous behavior)", {
+  captured_writes <- c()
+  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, write, res.path = NULL, sens = NULL) {
+    captured_writes <<- c(captured_writes, write)
+    mock_generate_fn(uka, condition, spec_cutoff, b, write, sens)
+  }
+
+  score_conditions(
+    list(make_spec("cond_A")), ppi_network = NULL, spec_cutoff = 0, b = 1, nPerms = 3,
+    rank_uka_abs = TRUE, perc_cutoff = 0,
+    generate_fn = capturing_generate_fn, uka_top_fn = mock_uka_top_fn, paired = FALSE
+  )
+
+  expect_true(all(!captured_writes))
+})
+
 test_that("score_conditions includes sens in build args when paired = TRUE", {
   captured_args <- list()
   capturing_generate_fn <- function(uka, sens, condition, spec_cutoff, b, write) {
