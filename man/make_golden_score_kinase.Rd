@@ -49,9 +49,10 @@ intended. Default 500.}
 gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
-A list: \code{results} (one row per condition x spec_cutoff x
+A list: \code{results} (one row per \code{Comparison} x spec_cutoff x
 perc_cutoff x b x rank_uka_abs x ppi_network, across every
-combination's folder), \code{logs}.
+combination's folder -- \code{Comparison} is the condition/contrast label,
+e.g. \code{"DrugA_vs_DMSO"}), \code{logs}.
 }
 \description{
 Unified grid interface -- \code{spec_cutoff}/\code{perc_cutoff} are gridded (every

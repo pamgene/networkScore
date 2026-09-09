@@ -135,11 +135,12 @@ result_full <- make_golden_score(
 ## Reading results
 
 `result$results`/`result_full$results` -- the main output of this package --
-has one row per condition x `spec_cutoff` x `perc_cutoff` x `b` x
-`rank_uka_abs` x `ppi_network`, with `score_sig_network`
-(network-topology significance) and, for the golden (paired) path,
-`score_sig_overlap`/`score_sig_overlap_fam` (kinase/sensitivity overlap
-significance, individual and family-level) -- lower means more significant:
+has one row per `Comparison` (the condition/contrast being scored, e.g.
+`"DrugA_vs_DMSO"`) x `spec_cutoff` x `perc_cutoff` x `b` x `rank_uka_abs` x
+`ppi_network`, with `score_sig_network` (network-topology significance) and,
+for the golden (paired) path, `score_sig_overlap`/`score_sig_overlap_fam`
+(kinase/sensitivity overlap significance, individual and family-level) --
+lower means more significant:
 
 ```{r results-table-kinase, echo = FALSE}
 knitr::kable(result$results, digits = 3, caption = "Kinase-only score")

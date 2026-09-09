@@ -201,9 +201,10 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @param ... Passed to every build, uniform across the whole grid (not
 #'   gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
 #'
-#' @return A list: `results` (one row per condition x spec_cutoff x
+#' @return A list: `results` (one row per `Comparison` x spec_cutoff x
 #'   perc_cutoff x b x rank_uka_abs x ppi_network, across every
-#'   combination's folder), `logs`.
+#'   combination's folder -- `Comparison` is the condition/contrast label,
+#'   e.g. `"DrugA_vs_DMSO"`), `logs`.
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b, nperms_network = 50,
@@ -253,7 +254,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
     all_metrics_df <- initialize_or_read_df(folder, "metrics_permutations")
     all_obs_metrics_df <- initialize_or_read_df(folder, "metrics_observed")
 
-    already_done <- if (nrow(results) > 0) results$condition else character()
+    already_done <- if (nrow(results) > 0) results$Comparison else character()
     todo_cells <- Filter(function(cell) !(cell$condition %in% already_done), cells)
 
     loop_start <- Sys.time()
@@ -265,7 +266,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
           cell_key = cell$cell_key, condition = cell$condition, spec_cutoff = cell$spec_cutoff,
           perc_cutoff = cell$perc_cutoff, b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
           uka_filt = cell$uka_filt, uka_cell_all = cell$uka_cell_all, sens_filt = NULL, respath = folder,
-          vals_extra = list(condition = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff, n_kins = nrow(cell$uka_filt))
+          vals_extra = list(Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff, n_kins = nrow(cell$uka_filt))
         )
       })
 
@@ -341,8 +342,12 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #' @param ... Passed to every network build, uniform across the whole grid
 #'   (not gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
 #'
-#' @return A list: `results` (one row per cell x spec_cutoff x perc_cutoff x
-#'   b x rank_uka_abs x ppi_network, across every combination's folder), `logs`.
+#' @return A list: `results` (one row per `Comparison` x spec_cutoff x
+#'   perc_cutoff x b x rank_uka_abs x ppi_network, across every
+#'   combination's folder -- `Comparison` is the full, untruncated
+#'   "X vs control" contrast label, e.g. `"DrugA vs Control"`; the
+#'   cell-line-only join key used internally against sensitivity data isn't
+#'   part of the output), `logs`.
 #' @export
 make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff, respath, uka_fam,
                                     ppi_network, b, del_cells = NULL, zscore = FALSE,
@@ -404,8 +409,8 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
     all_metrics_df <- initialize_or_read_df(folder, "metrics_permutations")
     all_obs_metrics_df <- initialize_or_read_df(folder, "metrics_observed")
 
-    already_done <- if (nrow(results) > 0) results$cell else character()
-    todo_cells <- Filter(function(cell) !(cell$condition %in% already_done), cells)
+    already_done <- if (nrow(results) > 0) results$Comparison else character()
+    todo_cells <- Filter(function(cell) !(cell$uka_cell_all$comparison[1] %in% already_done), cells)
 
     loop_start <- Sys.time()
     temp_files <- c()
@@ -440,7 +445,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
         cell <- todo_cells[[i]]
         sens_filt <- cell_sens[[i]]
         vals <- list(
-          cell = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
+          Comparison = cell$uka_cell_all$comparison[1], spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
           n_targets = nrow(sens_filt), n_kins = nrow(cell$uka_filt), max_sens_value = max(sens_filt$LogFC)
         )
 

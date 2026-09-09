@@ -60,6 +60,7 @@ test_that("make_golden_score_kinase's permutation filtering uses the same column
 test_that("make_golden_score_full batches all cells' network-score builds into a single generate_networks_batch call per perc_cutoff (full flattening)", {
   cleaned_uka <- data.frame(
     cell_line = rep(c("cellA", "cellB"), each = 3),
+    comparison = rep(c("cellA vs DMSO", "cellB vs DMSO"), each = 3),
     uniprotname = rep(c("K1", "K2", "K3"), 2),
     LogFC = c(2.0, -1.5, 0.3, 1.8, -1.2, 0.1),
     fscore = 2.0
@@ -119,7 +120,7 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
   expect_equal(batch_calls, list(8))
 
   expect_equal(nrow(result$results), 2)
-  expect_setequal(result$results$cell, c("cellA", "cellB"))
+  expect_setequal(result$results$Comparison, c("cellA vs DMSO", "cellB vs DMSO"))
   expect_true(all(c("score_sig_network", "score_sig_network_inv") %in% colnames(result$results)))
 })
 

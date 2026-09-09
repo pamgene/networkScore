@@ -12,7 +12,11 @@
 #' @param cs If `TRUE`, use the per-comparison specificity columns; if
 #'   `FALSE` (default), use the mean/median variants.
 #'
-#' @return Data frame with columns `cell_line`, `uniprotname`, `LogFC`, `fscore`.
+#' @return Data frame with columns `cell_line`, `comparison` (the full,
+#'   untruncated "X vs control"/"control vs X" label -- `cell_line` itself
+#'   has `control` stripped out, since it's used as a join key against
+#'   sensitivity data's own cell-line identifier, not shown to the user),
+#'   `uniprotname`, `LogFC`, `fscore`.
 #' @export
 clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = FALSE) {
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
@@ -28,13 +32,14 @@ clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = FALSE) {
     dplyr::mutate(contrast = gsub(.data$contrast, pattern = "-", replacement = "")) %>%
     dplyr::mutate(
       control_left = stringr::str_detect(.data$contrast, paste0("^", control, " vs ")),
+      comparison = .data$contrast,
       cell_line = ifelse(.data$control_left,
         stringr::str_replace(.data$contrast, paste0(control, " vs "), ""),
         stringr::str_replace(.data$contrast, paste0(" vs ", control), "")
       ),
       MKS = ifelse(.data$control_left, -.data[[stat_col]], .data[[stat_col]])
     ) %>%
-    dplyr::select("cell_line", "Kinase Name", "MKS", dplyr::all_of(finalscore_col)) %>%
+    dplyr::select("cell_line", "comparison", "Kinase Name", "MKS", dplyr::all_of(finalscore_col)) %>%
     dplyr::rename("uniprotname" = "Kinase Name", "LogFC" = "MKS", "fscore" = dplyr::all_of(finalscore_col)) %>%
     dplyr::mutate(cell_line = gsub(.data$cell_line, pattern = "-", replacement = "")) %>%
     dplyr::distinct()

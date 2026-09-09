@@ -17,7 +17,11 @@ clean_uka_to_kinograte_full(uka, spec_cutoff, control, cs = FALSE)
 \code{FALSE} (default), use the mean/median variants.}
 }
 \value{
-Data frame with columns \code{cell_line}, \code{uniprotname}, \code{LogFC}, \code{fscore}.
+Data frame with columns \code{cell_line}, \code{comparison} (the full,
+untruncated "X vs control"/"control vs X" label -- \code{cell_line} itself
+has \code{control} stripped out, since it's used as a join key against
+sensitivity data's own cell-line identifier, not shown to the user),
+\code{uniprotname}, \code{LogFC}, \code{fscore}.
 }
 \description{
 Handles both "X vs control" and "control vs X" contrast naming, flipping

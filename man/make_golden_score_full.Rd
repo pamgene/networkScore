@@ -79,8 +79,12 @@ actually intended. Default 500.}
 (not gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
-A list: \code{results} (one row per cell x spec_cutoff x perc_cutoff x
-b x rank_uka_abs x ppi_network, across every combination's folder), \code{logs}.
+A list: \code{results} (one row per \code{Comparison} x spec_cutoff x
+perc_cutoff x b x rank_uka_abs x ppi_network, across every
+combination's folder -- \code{Comparison} is the full, untruncated
+"X vs control" contrast label, e.g. \code{"DrugA vs Control"}; the
+cell-line-only join key used internally against sensitivity data isn't
+part of the output), \code{logs}.
 }
 \description{
 Unified grid interface, same shape as \code{\link[=make_golden_score_kinase]{make_golden_score_kinase()}}:
