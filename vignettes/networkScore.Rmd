@@ -13,17 +13,12 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 `networkScore` computes a permutation-test significance score for a
 condition's PCSF network -- either kinase-only, or paired with sensitivity
-data ("golden score"). Every network build goes through `networkGen`
-(see its own vignette, `vignette("networkGen")`, for the underlying
-`prepare_run_params()`/parameter-tracking mechanism this package builds on,
-and its "unified grid interface" section for `build_network_grid()`, which
-`make_golden_score_kinase()`/`make_golden_score_full()` use internally too --
-`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`, and `ppi_network` are all
-griddable exactly the same way here as they are for plain generation: pass
-any of them as a vector (a fully named list, for `ppi_network`) and every
-combination gets scored, not just the ones a particular call happens to
-compare). Additional arguments passed via `...` (e.g. `n`, the number of
-PCSF randomized runs) go uniformly to every build in the grid, not gridded.
+data ("golden score"). Every network build goes through `networkGen` (see
+`vignette("networkGen")` for how a network is built and its parameters).
+`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`, and `ppi_network` can all
+be tuned as vectors here -- every combination gets scored, not just the ones
+a particular call happens to compare. Additional arguments (e.g. `n`, the
+number of PCSF randomized runs) apply uniformly to every build, not gridded.
 
 ```{r setup}
 library(networkGen)
@@ -90,10 +85,9 @@ result$results
 ## Golden score (paired kinase + sensitivity)
 
 The paired path needs a `contrast` column identifying treatment vs. control
-(`clean_uka_to_kinograte_full()` handles both "X vs control" and "control vs
-X" naming), and raw sensitivity data with a matching `CELL_LINE_NAME` --
-including a `"Control"` row, since sensitivity `LogFC` is computed as
-fold-change relative to it:
+("X vs control" or "control vs X" naming both work), and raw sensitivity
+data with a matching `CELL_LINE_NAME` -- including a `"Control"` row, since
+sensitivity `LogFC` is computed as fold-change relative to it:
 
 ```{r toy-paired-data}
 toy_uka_full <- data.frame(
@@ -142,29 +136,23 @@ result_full$results
 
 `result$results` has one row per condition x `spec_cutoff` x `perc_cutoff` x
 `b` x `rank_uka_abs` x `ppi_network`, with `score_sig_network`
-(network-topology significance) and, for the
-golden (paired) path, `score_sig_overlap`/`score_sig_overlap_fam` (kinase/
-sensitivity overlap significance, individual and family-level) -- lower
-means more significant.
+(network-topology significance) and, for the golden (paired) path,
+`score_sig_overlap`/`score_sig_overlap_fam` (kinase/sensitivity overlap
+significance, individual and family-level) -- lower means more significant.
 
 ## Output: one folder per grid combination
 
-`respath` above is just a base directory. Both calls go through
-`networkGen::build_network_grid()`/`prepare_run_params()` internally (via
-this package's own `prepare_score_run_params()`, which extends
-`networkGen`'s naming rule with `nperms_network`/`relative_to`) -- so each
-distinct `(spec_cutoff, perc_cutoff, b, rank_uka_abs, ppi_network)`
-combination gets its **own** folder, same as plain generation: the kinase
-example above grids 2 `perc_cutoff` values x 2 `b` values, so 4 folders,
-each with `results.csv`/`metrics_permutations.csv`/`metrics_observed.csv`,
-the faceted diagnostic histograms
+`respath` above is just a base directory. Each distinct `(spec_cutoff,
+perc_cutoff, b, rank_uka_abs, ppi_network)` combination gets its **own**
+folder, same as plain generation with `networkGen`: the kinase example
+above grids 2 `perc_cutoff` values x 2 `b` values, so 4 folders, each with
+`results.csv`/`metrics_permutations.csv`/`metrics_observed.csv`, the
+faceted diagnostic histograms
 (`Network_metrics_plots/<metric>_cutoff<cutoff>.png` -- permutation-null-
 distribution per metric, faceted by condition, observed value marked with a
-line), and each condition's **observed** network
-(`nodes`/`edges`/`wc_df` CSVs, written by the same
-`networkGen::kinograte_pg_pcsf()` mechanism `write = TRUE` uses directly).
-Permutation networks (there are `nperms_network` of them per condition) are
-never written -- only the observed build:
+line), and each condition's **observed** network (`nodes`/`edges`/`wc_df`
+CSVs). Permutation networks (there are `nperms_network` of them per
+condition) are never written -- only the observed build:
 
 ```{r list-output}
 list.files(respath_kinase, recursive = TRUE)
@@ -191,17 +179,17 @@ make_golden_score_kinase(
 )
 ```
 
-## Under the hood: full flattening
+## Parallel vs. sequential execution
 
 Every network needed -- one observed plus `nperms_network` permuted, for
 every condition x `spec_cutoff` x `perc_cutoff` x `b` x `rank_uka_abs` x
-`ppi_network` combination -- is built in one flattened batch. Set a `future`
-plan before calling to get actual parallelism:
+`ppi_network` combination -- is submitted together, so a `future` plan set
+before calling parallelizes across all of it (every condition and every
+permutation at once, not just across conditions):
 
 ```{r batch-plan, eval = FALSE}
 future::plan(future::multisession, workers = 4)
 ```
 
-Without a plan set, `networkGen::generate_networks_batch()` (which both
-`make_golden_score_full()`/`make_golden_score_kinase()` call internally, via
-`score_conditions()`) runs sequentially -- still correct, just not parallel.
+Without a plan set, both functions run sequentially -- still correct, just
+not parallel.
