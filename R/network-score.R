@@ -201,10 +201,12 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @param ... Passed to every build, uniform across the whole grid (not
 #'   gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
 #'
-#' @return A list: `results` (one row per `Comparison` x spec_cutoff x
-#'   perc_cutoff x b x rank_uka_abs x ppi_network, across every
-#'   combination's folder -- `Comparison` is the condition/contrast label,
-#'   e.g. `"DrugA_vs_DMSO"`), `logs`.
+#' @return A list: `results` (one row per `Comparison` x every grid
+#'   combination, across every folder -- `Comparison` is the condition/
+#'   contrast label, e.g. `"DrugA_vs_DMSO"`; `spec_cutoff`/`perc_cutoff`/`b`/
+#'   `rank_uka_abs`/`ppi_network` each appear as a column only if that
+#'   dimension actually varies across this call's grid, see
+#'   [drop_constant_grid_columns()]), `logs`.
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b, nperms_network = 50,
@@ -266,7 +268,11 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
           cell_key = cell$cell_key, condition = cell$condition, spec_cutoff = cell$spec_cutoff,
           perc_cutoff = cell$perc_cutoff, b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
           uka_filt = cell$uka_filt, uka_cell_all = cell$uka_cell_all, sens_filt = NULL, respath = folder,
-          vals_extra = list(Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff, n_kins = nrow(cell$uka_filt))
+          vals_extra = list(
+            Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
+            b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
+            n_kins = nrow(cell$uka_filt)
+          )
         )
       })
 
@@ -294,7 +300,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
     all_logs <- c(all_logs, out$logs)
   }
 
-  list(results = dplyr::bind_rows(all_results), logs = all_logs)
+  list(results = drop_constant_grid_columns(dplyr::bind_rows(all_results)), logs = all_logs)
 }
 
 #' Full (paired kinase + sensitivity) golden score analysis
@@ -342,12 +348,14 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #' @param ... Passed to every network build, uniform across the whole grid
 #'   (not gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
 #'
-#' @return A list: `results` (one row per `Comparison` x spec_cutoff x
-#'   perc_cutoff x b x rank_uka_abs x ppi_network, across every
-#'   combination's folder -- `Comparison` is the full, untruncated
-#'   "X vs control" contrast label, e.g. `"DrugA vs Control"`; the
-#'   cell-line-only join key used internally against sensitivity data isn't
-#'   part of the output), `logs`.
+#' @return A list: `results` (one row per `Comparison` x every grid
+#'   combination, across every folder -- `Comparison` is the full,
+#'   untruncated "X vs control" contrast label, e.g. `"DrugA vs Control"`;
+#'   the cell-line-only join key used internally against sensitivity data
+#'   isn't part of the output; `spec_cutoff`/`perc_cutoff`/`b`/
+#'   `rank_uka_abs`/`ppi_network` each appear as a column only if that
+#'   dimension actually varies across this call's grid, see
+#'   [drop_constant_grid_columns()]), `logs`.
 #' @export
 make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff, respath, uka_fam,
                                     ppi_network, b, del_cells = NULL, zscore = FALSE,
@@ -446,6 +454,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
         sens_filt <- cell_sens[[i]]
         vals <- list(
           Comparison = cell$uka_cell_all$comparison[1], spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
+          b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
           n_targets = nrow(sens_filt), n_kins = nrow(cell$uka_filt), max_sens_value = max(sens_filt$LogFC)
         )
 
@@ -482,5 +491,5 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
     all_logs <- c(all_logs, out$logs)
   }
 
-  list(results = dplyr::bind_rows(all_results), logs = all_logs)
+  list(results = drop_constant_grid_columns(dplyr::bind_rows(all_results)), logs = all_logs)
 }

@@ -47,6 +47,34 @@ test_that("reconstruct_golden_score_from_temp and find_missing_golden_score_comb
   expect_equal(missing$condition, "condB")
 })
 
+test_that("drop_constant_grid_columns drops only the grid columns that don't vary", {
+  results <- data.frame(
+    Comparison = c("A", "B", "A", "B"),
+    spec_cutoff = c(1, 1, 1, 1), # constant -- dropped
+    perc_cutoff = c(0.5, 0.5, 0.7, 0.7), # varies -- kept
+    b = c(50, 50, 75, 75), # varies -- kept
+    rank_uka_abs = c(TRUE, TRUE, TRUE, TRUE), # constant -- dropped
+    ppi_network = c("v12", "v12", "v12", "v12"), # constant -- dropped
+    score_sig_network = c(0.1, 0.2, 0.3, 0.4) # not a grid column -- always kept
+  )
+
+  out <- drop_constant_grid_columns(results)
+
+  expect_equal(colnames(out), c("Comparison", "perc_cutoff", "b", "score_sig_network"))
+  expect_equal(nrow(out), 4)
+})
+
+test_that("drop_constant_grid_columns keeps every grid column when everything varies", {
+  results <- data.frame(spec_cutoff = c(0.5, 0.7), perc_cutoff = c(0.5, 0.7), b = c(1, 2))
+  out <- drop_constant_grid_columns(results)
+  expect_equal(colnames(out), c("spec_cutoff", "perc_cutoff", "b"))
+})
+
+test_that("drop_constant_grid_columns tolerates missing grid columns and a single row", {
+  results <- data.frame(Comparison = "A", score_sig_network = 0.1)
+  expect_equal(drop_constant_grid_columns(results), results)
+})
+
 test_that("perc_suffix omits the suffix for 0 and is vectorized", {
   expect_equal(perc_suffix(0), "")
   expect_equal(perc_suffix(0.7), "_0.7")

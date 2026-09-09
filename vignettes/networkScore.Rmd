@@ -136,19 +136,42 @@ result_full <- make_golden_score(
 
 `result$results`/`result_full$results` -- the main output of this package --
 has one row per `Comparison` (the condition/contrast being scored, e.g.
-`"DrugA_vs_DMSO"`) x `spec_cutoff` x `perc_cutoff` x `b` x `rank_uka_abs` x
-`ppi_network`, with `score_sig_network` (network-topology significance) and,
-for the golden (paired) path, `score_sig_overlap`/`score_sig_overlap_fam`
-(kinase/sensitivity overlap significance, individual and family-level) --
-lower means more significant:
+`"DrugA_vs_DMSO"`) x every grid parameter, plus the output scores. Only the
+parameters this particular call actually grids show up as columns --
+`spec_cutoff`/`perc_cutoff`/`b`/`rank_uka_abs`/`ppi_network` each appear
+only if that dimension has more than one value in this run; a parameter
+fixed at a single value is dropped, since a constant column carries no
+information. Lower scores mean more significant throughout.
 
 ```{r results-table-kinase, echo = FALSE}
 knitr::kable(result$results, digits = 3, caption = "Kinase-only score")
 ```
 
+**Kinase-only mode:**
+
+- **`score_sig_network`** -- measures whether the top predicted kinases form
+  a more interconnected network than random kinases from the same
+  condition (see "Network-topology metrics" below: `rel_med_path`).
+- **`score_sig_network_inv`** -- a variant of `score_sig_network` that
+  focuses on the more interconnected parts of the network (see
+  `rel_med_path_inv` below).
+- Columns starting with **`obs_`** are the actual observed values (as
+  opposed to the permutation-derived significance scores).
+
 ```{r results-table-full, echo = FALSE}
 knitr::kable(result_full$results, digits = 3, caption = "Golden score (paired)")
 ```
+
+**Golden-score mode** (adds sensitivity/target information on top of the
+kinase-only scores above):
+
+- **`score_sig_network`** -- measures whether the top predicted kinases form
+  a more interconnected network *with the sensitivity targets* than random
+  kinases from the same condition.
+- **Overlap scores** (`obs_overlap`/`score_sig_overlap`) -- the overlap
+  between predicted kinases and sensitivity targets, divided by the number
+  of targets. The `_fam` versions (`obs_overlap_fam`/`score_sig_overlap_fam`)
+  are the same comparison at the kinase-family level.
 
 ### Network-topology metrics behind `score_sig_network`
 

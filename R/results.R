@@ -16,6 +16,42 @@ initialize_or_read_df <- function(respath, dfname) {
   }
 }
 
+#' Drop grid-parameter columns that don't actually vary across a result set
+#'
+#' `make_golden_score_kinase()`/`make_golden_score_full()` record all five
+#' grid dimensions (`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`,
+#' `ppi_network`) on every row, regardless of whether a particular call
+#' actually gridded that dimension -- most calls fix most of them at a
+#' single value. A column that's constant across every row is noise, not
+#' information about what varies in *this* result; this keeps only the
+#' ones that actually differ somewhere in the combined result, so the
+#' columns shown depend on the grid actually run, not a fixed schema.
+#'
+#' Only ever drops from the columns it's told to consider (`grid_cols`) --
+#' `Comparison` and every score/stat column are always kept, whether or not
+#' this is called on them.
+#'
+#' @param results A results data frame (e.g. from
+#'   [make_golden_score_kinase()]/[make_golden_score_full()], after
+#'   combining every folder's rows).
+#' @param grid_cols Character vector of column names to consider dropping
+#'   if constant. Default the five `networkGen`/`networkScore` grid
+#'   dimensions.
+#'
+#' @return `results`, with any of `grid_cols` removed if it has at most one
+#'   distinct (non-missing) value across all rows.
+#' @export
+drop_constant_grid_columns <- function(results, grid_cols = c("spec_cutoff", "perc_cutoff", "b", "rank_uka_abs", "ppi_network")) {
+  constant <- vapply(grid_cols, function(col) {
+    if (!col %in% colnames(results)) {
+      return(FALSE)
+    }
+    length(unique(stats::na.omit(results[[col]]))) <= 1
+  }, logical(1))
+
+  results[, !colnames(results) %in% grid_cols[constant], drop = FALSE]
+}
+
 #' Write out a completed (or partially-completed) golden-score run
 #'
 #' Writes `results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`,
