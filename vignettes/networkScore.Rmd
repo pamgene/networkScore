@@ -249,6 +249,49 @@ length(full_files)
 head(full_files, n = 2)
 ```
 
+## Comparing scores across separate runs
+
+`plot_score_comparison()` reads every `results.csv` under each of several
+result folders (recursively -- so a folder can be a single grid
+combination, or a whole multi-combination run) and plots
+`score_sig_network`/`score_sig_network_inv` as boxplots per `Comparison`,
+one facet per folder -- for comparing the *same* comparisons across
+*different* grid combinations, or entirely separate runs. Give each folder
+an alias; that alias becomes its facet title, and facets appear in the
+order given, not alphabetically. A box's spread comes from however many
+grid combinations exist inside that folder -- a single-combination folder
+gives a one-point "box".
+
+A second, small run with a different `b`, to compare against the grid built
+above:
+
+```{r comparison-second-run}
+respath_alt <- tempfile("kinase_score_alt_")
+dir.create(respath_alt)
+
+result_alt <- make_golden_score(
+  uka = toy_uka, spec_cutoff = 1.0, perc_cutoff = 0.6,
+  ppi_network = ppi_networkv12_502_kins, b = 60,
+  respath = respath_alt, nperms_network = 2, n = 2
+)
+```
+
+```{r comparison-plot}
+plot_score_comparison(c(
+  "b = 50/75 grid" = respath_kinase,
+  "b = 60" = respath_alt
+))
+```
+
+Only `Comparison` values present in **every** listed folder are kept -- if
+you accidentally compare folders from unrelated runs with no comparisons in
+common, this refuses with a clear error instead of silently producing a
+misleading empty plot:
+
+```{r comparison-error, error = TRUE}
+plot_score_comparison(c(kinase = respath_kinase, golden = respath_full))
+```
+
 ## Safety guard for large grids
 
 Like `networkGen::run_network_grid()`, both functions refuse to proceed
