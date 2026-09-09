@@ -18,8 +18,12 @@ data ("golden score"). Every network build goes through `networkGen`
 `prepare_run_params()`/parameter-tracking mechanism this package builds on,
 and its "unified grid interface" section for `build_network_grid()`, which
 `make_golden_score_kinase()`/`make_golden_score_full()` use internally too --
-`spec_cutoff`/`perc_cutoff` are gridded exactly the same way here as they
-are for plain generation).
+`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`, and `ppi_network` are all
+griddable exactly the same way here as they are for plain generation: pass
+any of them as a vector (a fully named list, for `ppi_network`) and every
+combination gets scored, not just the ones a particular call happens to
+compare). Additional arguments passed via `...` (e.g. `n`, the number of
+PCSF randomized runs) go uniformly to every build in the grid, not gridded.
 
 ```{r setup}
 library(networkGen)
@@ -55,10 +59,15 @@ head(toy_uka)
 ## Kinase-only score
 
 `nperms_network` is kept small here (2) for a fast-running example; use 50+
-for a real analysis. `b = 50` clears PCSF's terminal-inclusion threshold for
-this data's percentile-rank-scale prizes (see `vignette("networkGen")`'s
-"Key parameters" section for the `b`/`w` economics). `perc_cutoff` is a
-vector -- both values are scored, gridded against every condition:
+for a real analysis. `n = 2` likewise trims PCSF's own randomized-run count
+per build (default 8) for speed -- passed through via `...`, uniformly to
+every build, not gridded. `b = 50` clears PCSF's terminal-inclusion
+threshold for this data's percentile-rank-scale prizes (see
+`vignette("networkGen")`'s "Key parameters" section for the `b`/`w`
+economics). `perc_cutoff` **and** `b` are both vectors here -- every
+combination is scored, gridded against every condition (not just
+`spec_cutoff`/`perc_cutoff`; `rank_uka_abs` and `ppi_network` grid the same
+way, see above):
 
 ```{r kinase-score}
 respath_kinase <- tempfile("kinase_score_")
@@ -69,9 +78,10 @@ result <- make_golden_score(
   spec_cutoff = 1.0,
   perc_cutoff = c(0.5, 0.7),
   ppi_network = ppi_networkv12_502_kins,
-  b = 50,
+  b = c(50, 75),
   respath = respath_kinase,
-  nperms_network = 2
+  nperms_network = 2,
+  n = 2
 )
 
 result$results
@@ -121,7 +131,8 @@ result_full <- make_golden_score(
   b = 50,
   respath = respath_full,
   nperms_overlap = 20,
-  nperms_network = 2
+  nperms_network = 2,
+  n = 2
 )
 
 result_full$results
@@ -129,20 +140,22 @@ result_full$results
 
 ## Reading results
 
-`result$results` has one row per condition x `spec_cutoff` x `perc_cutoff`,
-with `score_sig_network` (network-topology significance) and, for the
+`result$results` has one row per condition x `spec_cutoff` x `perc_cutoff` x
+`b` x `rank_uka_abs` x `ppi_network`, with `score_sig_network`
+(network-topology significance) and, for the
 golden (paired) path, `score_sig_overlap`/`score_sig_overlap_fam` (kinase/
 sensitivity overlap significance, individual and family-level) -- lower
 means more significant.
 
-## Output: one folder per `(spec_cutoff, perc_cutoff)` combination
+## Output: one folder per grid combination
 
 `respath` above is just a base directory. Both calls go through
 `networkGen::build_network_grid()`/`prepare_run_params()` internally (via
 this package's own `prepare_score_run_params()`, which extends
 `networkGen`'s naming rule with `nperms_network`/`relative_to`) -- so each
-distinct `(spec_cutoff, perc_cutoff)` combination gets its **own** folder,
-same as plain generation: two `perc_cutoff` values above means two folders,
+distinct `(spec_cutoff, perc_cutoff, b, rank_uka_abs, ppi_network)`
+combination gets its **own** folder, same as plain generation: the kinase
+example above grids 2 `perc_cutoff` values x 2 `b` values, so 4 folders,
 each with `results.csv`/`metrics_permutations.csv`/`metrics_observed.csv`,
 the faceted diagnostic histograms
 (`Network_metrics_plots/<metric>_cutoff<cutoff>.png` -- permutation-null-
@@ -181,9 +194,9 @@ make_golden_score_kinase(
 ## Under the hood: full flattening
 
 Every network needed -- one observed plus `nperms_network` permuted, for
-every condition x `spec_cutoff` x `perc_cutoff` combination -- is built in
-one flattened batch. Set a `future` plan before calling to get actual
-parallelism:
+every condition x `spec_cutoff` x `perc_cutoff` x `b` x `rank_uka_abs` x
+`ppi_network` combination -- is built in one flattened batch. Set a `future`
+plan before calling to get actual parallelism:
 
 ```{r batch-plan, eval = FALSE}
 future::plan(future::multisession, workers = 4)

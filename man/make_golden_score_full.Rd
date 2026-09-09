@@ -24,7 +24,8 @@ make_golden_score_full(
   rank_uka_abs = TRUE,
   balance = FALSE,
   cs = FALSE,
-  max_tasks = 500
+  max_tasks = 500,
+  ...
 )
 }
 \arguments{
@@ -34,22 +35,21 @@ make_golden_score_full(
 
 \item{control}{Control condition name, as it appears in UKA's \code{contrast} column.}
 
-\item{spec_cutoff, perc_cutoff}{Numeric vectors -- every combination is
-scored.}
+\item{spec_cutoff, perc_cutoff, b, rank_uka_abs}{Vectors -- every combination
+is scored, not just the ones a particular caller happens to compare.}
 
-\item{respath}{Base output directory. Each \verb{(spec_cutoff, perc_cutoff)}
-combination gets its own parameter-encoded subfolder under it (see
-\code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) -- \code{results.csv},
-\code{metrics_permutations.csv}, \code{metrics_observed.csv}, the faceted
-diagnostic histograms, and each cell's observed network
+\item{respath}{Base output directory. Each combination gets its own
+parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}})
+-- \code{results.csv}, \code{metrics_permutations.csv}, \code{metrics_observed.csv},
+the faceted diagnostic histograms, and each cell's observed network
 (\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation networks)
 all land there.}
 
 \item{uka_fam}{Kinase-family lookup table (\code{Kinase_Name}, \code{Kinase_family}), for overlap scoring.}
 
-\item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
-
-\item{b}{PCSF terminal-prize weight.}
+\item{ppi_network}{A data frame with columns \code{head}, \code{tail}, \code{cost}, or a
+fully named list of them (e.g. \code{list(v12 = ppi_networkv12, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
+network.}
 
 \item{del_cells}{Optional character vector of cell lines to exclude.}
 
@@ -64,8 +64,6 @@ one drug per target.}
 
 \item{nperms_overlap, nperms_network}{Number of permutations for each score. Defaults 500, 50.}
 
-\item{rank_uka_abs}{If \code{TRUE} (default), rank kinase hits by \code{abs(LogFC)}.}
-
 \item{balance}{If \code{TRUE}, lowers the sensitivity percentile cutoff by 0.2 (see \code{networkGen::sens_top()}).}
 
 \item{cs}{If \code{TRUE}, use the per-comparison specificity column.}
@@ -76,10 +74,13 @@ builds -- a safety guard against an unintentionally huge overnight run,
 not a time estimate (overlap-score permutations are cheap, no PCSF
 calls, and don't count toward this). Raise explicitly if the size is
 actually intended. Default 500.}
+
+\item{...}{Passed to every network build, uniform across the whole grid
+(not gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
-A list: \code{results} (one row per cell x spec_cutoff x perc_cutoff,
-across every combination's folder), \code{logs}.
+A list: \code{results} (one row per cell x spec_cutoff x perc_cutoff x
+b x rank_uka_abs x ppi_network, across every combination's folder), \code{logs}.
 }
 \description{
 Unified grid interface, same shape as \code{\link[=make_golden_score_kinase]{make_golden_score_kinase()}}:

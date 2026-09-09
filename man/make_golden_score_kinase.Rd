@@ -14,30 +14,28 @@ make_golden_score_kinase(
   nperms_network = 50,
   rank_uka_abs = TRUE,
   cs = FALSE,
-  max_tasks = 500
+  max_tasks = 500,
+  ...
 )
 }
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
 
-\item{spec_cutoff, perc_cutoff}{Numeric vectors -- every combination is
-scored.}
+\item{spec_cutoff, perc_cutoff, b, rank_uka_abs}{Vectors -- every combination
+is scored, not just the ones a particular caller happens to compare.}
 
-\item{respath}{Base output directory. Each \verb{(spec_cutoff, perc_cutoff)}
-combination gets its own parameter-encoded subfolder under it (see
-\code{\link[=prepare_score_run_params]{prepare_score_run_params()}}) -- \code{results.csv},
-\code{metrics_permutations.csv}, \code{metrics_observed.csv}, the faceted
-diagnostic histograms, and each condition's observed network
-(\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation networks)
-all land there.}
+\item{respath}{Base output directory. Each combination gets its own
+parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}})
+-- \code{results.csv}, \code{metrics_permutations.csv}, \code{metrics_observed.csv},
+the faceted diagnostic histograms, and each condition's observed
+network (\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutation
+networks) all land there.}
 
-\item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
-
-\item{b}{PCSF terminal-prize weight.}
+\item{ppi_network}{A data frame with columns \code{head}, \code{tail}, \code{cost}, or a
+fully named list of them (e.g. \code{list(v12 = ppi_networkv12, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
+network.}
 
 \item{nperms_network}{Number of permutations per condition. Default 50.}
-
-\item{rank_uka_abs}{If \code{TRUE} (default), rank kinase hits by \code{abs(LogFC)}.}
 
 \item{cs}{If \code{TRUE}, use the per-comparison specificity column.}
 
@@ -46,10 +44,14 @@ if the grid, with permutations, expands to more than this many
 networks -- a safety guard against an unintentionally huge overnight
 run, not a time estimate. Raise explicitly if the size is actually
 intended. Default 500.}
+
+\item{...}{Passed to every build, uniform across the whole grid (not
+gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
 A list: \code{results} (one row per condition x spec_cutoff x
-perc_cutoff, across every combination's folder), \code{logs}.
+perc_cutoff x b x rank_uka_abs x ppi_network, across every
+combination's folder), \code{logs}.
 }
 \description{
 Unified grid interface -- \code{spec_cutoff}/\code{perc_cutoff} are gridded (every

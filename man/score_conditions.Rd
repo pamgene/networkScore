@@ -6,35 +6,31 @@
 \usage{
 score_conditions(
   condition_specs,
-  ppi_network,
-  b,
   nPerms,
-  rank_uka_abs,
   generate_fn,
   uka_top_fn,
-  paired = FALSE
+  paired = FALSE,
+  ...
 )
 }
 \arguments{
-\item{condition_specs}{A list, one element per \verb{(condition, spec_cutoff, perc_cutoff)} grid cell (e.g. built from \code{networkGen::build_network_grid()}'s
-output), each a list with: \code{condition} (label), \code{spec_cutoff},
-\code{perc_cutoff}, \code{uka_filt} (observed top-hit kinase data frame),
-\code{uka_cell_all} (all kinase-activity rows for this cell, to build
-permutations from), \code{sens_filt} (observed top-hit sensitivity data
-frame, or \code{NULL} for kinase-only), \code{vals_extra} (named list merged into
-this cell's result row, e.g. \code{n_kins}), \code{respath} (folder the observed
-build is written into, or \code{NULL} to not write it -- typically every
-cell sharing a \verb{(spec_cutoff, perc_cutoff)} combination shares one
-folder, from \code{networkGen::prepare_grid_folders()}).}
-
-\item{ppi_network}{Data frame with columns \code{head}, \code{tail}, \code{cost}.}
-
-\item{b}{Passed to the generate function for every build.}
+\item{condition_specs}{A list, one element per grid cell (e.g. built from
+\code{networkGen::build_network_grid()}'s output), each a list with:
+\code{cell_key} (a value unique to this cell -- e.g. every field the grid
+varies over, joined -- used to regroup this cell's own observed +
+permutation results afterward, so cells that happen to share a
+\code{condition}/\code{spec_cutoff}/\code{perc_cutoff} but differ in \code{b}/\code{ppi_network}/
+\code{rank_uka_abs} aren't mixed together), \code{condition} (label),
+\code{spec_cutoff}, \code{perc_cutoff}, \code{b}, \code{rank_uka_abs}, \code{ppi_network},
+\code{uka_filt} (observed top-hit kinase data frame), \code{uka_cell_all} (all
+kinase-activity rows for this cell, to build permutations from),
+\code{sens_filt} (observed top-hit sensitivity data frame, or \code{NULL} for
+kinase-only), \code{vals_extra} (named list merged into this cell's result
+row, e.g. \code{n_kins}), \code{respath} (folder the observed build is written
+into, or \code{NULL} to not write it -- typically every cell sharing a
+combination shares one folder, from \code{networkGen::prepare_grid_folders()}).}
 
 \item{nPerms}{Number of permutations per cell.}
-
-\item{rank_uka_abs}{Passed to \code{uka_top_fn} when building each
-permutation's shuffled top-hit input.}
 
 \item{generate_fn}{\code{networkGen::generate_paired_network} or
 \code{networkGen::generate_kinase_network}.}
@@ -45,6 +41,9 @@ and paired paths use \code{networkGen::uka_top()} here, since by this point
 the input has already been cleaned to a common \code{fscore} column.}
 
 \item{paired}{If \code{TRUE}, every task also carries \code{sens = spec$sens_filt}.}
+
+\item{...}{Passed to \code{generate_fn} for every build (e.g. \code{n}, \code{w}, \code{r},
+\code{mu}, \code{seed}) -- uniform across the whole call, not gridded.}
 }
 \value{
 A list, one element per grid cell (same order as
