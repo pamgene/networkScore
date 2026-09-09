@@ -78,9 +78,9 @@ result <- make_golden_score(
   nperms_network = 2,
   n = 2
 )
-
-result$results
 ```
+
+(`result$results`, the main output, is shown under "Reading results" below.)
 
 ## Golden score (paired kinase + sensitivity)
 
@@ -128,17 +128,73 @@ result_full <- make_golden_score(
   nperms_network = 2,
   n = 2
 )
-
-result_full$results
 ```
+
+(`result_full$results` is shown under "Reading results" below, alongside the kinase-only table.)
 
 ## Reading results
 
-`result$results` has one row per condition x `spec_cutoff` x `perc_cutoff` x
-`b` x `rank_uka_abs` x `ppi_network`, with `score_sig_network`
+`result$results`/`result_full$results` -- the main output of this package --
+has one row per condition x `spec_cutoff` x `perc_cutoff` x `b` x
+`rank_uka_abs` x `ppi_network`, with `score_sig_network`
 (network-topology significance) and, for the golden (paired) path,
 `score_sig_overlap`/`score_sig_overlap_fam` (kinase/sensitivity overlap
-significance, individual and family-level) -- lower means more significant.
+significance, individual and family-level) -- lower means more significant:
+
+```{r results-table-kinase, echo = FALSE}
+knitr::kable(result$results, digits = 3, caption = "Kinase-only score")
+```
+
+```{r results-table-full, echo = FALSE}
+knitr::kable(result_full$results, digits = 3, caption = "Golden score (paired)")
+```
+
+### Network-topology metrics behind `score_sig_network`
+
+Every build -- the observed network and every permuted one -- gets four
+topology statistics, written to `metrics_observed.csv` (one row per
+condition x metric, from the observed build) and
+`metrics_permutations.csv` (one row per condition x metric x permutation):
+
+- **`rel_med_path`** -- median shortest-path distance between all node
+  pairs, relative to network size. Smaller means a more compact network.
+- **`rel_med_path_inv`** -- the same idea, but on an inverse-distance
+  transform of the path lengths first, so close pairs count for more than
+  far-apart ones.
+- **`density`** -- fraction of all possible edges actually present.
+- **`clustering`** -- mean local clustering coefficient: how much a node's
+  neighbors also connect to each other (triangle-forming), averaged across
+  the network.
+
+`score_sig_network` is a real one-sided permutation p-value on
+`rel_med_path`: the fraction of permutations whose `rel_med_path` is at
+least as small (compact) as the observed network's, floored at
+`1/nperms_network` so it's never exactly 0. `score_sig_network_inv` is the
+same test on `rel_med_path_inv`. `density`/`clustering` are recorded for
+inspection but don't drive either significance score.
+
+Each `(metric, perc_cutoff)` combination also gets a diagnostic plot: a
+histogram of that metric's permutation values, faceted by condition, with
+the observed value marked by a red dashed line -- a quick visual check of
+whether the observed network is unusually compact, rather than reading the
+summary number alone. Here's `rel_med_path` at `perc_cutoff = 0.5` from the
+kinase-only run above:
+
+```{r metric-plot, echo = FALSE, results = "asis"}
+rel_med_path_png <- list.files(
+  respath_kinase, pattern = "^rel_med_path_cutoff0\\.5\\.png$",
+  recursive = TRUE, full.names = TRUE
+)[1]
+# Embedded as a data URI (not knitr::include_graphics()) -- the PNG lives
+# under a tempfile() path outside the vignette's own directory tree, and
+# include_graphics()'s relative-path handling breaks under R CMD check's
+# more deeply nested vignette-rebuild working directory, even though it
+# works in a plain rmarkdown::render(). A data URI has no path to resolve.
+cat(sprintf(
+  '<img src="%s" style="max-width: 100%%;" alt="rel_med_path permutation-null histogram, faceted by condition">',
+  base64enc::dataURI(file = rel_med_path_png, mime = "image/png")
+))
+```
 
 ## Output: one folder per grid combination
 
@@ -155,14 +211,18 @@ CSVs). Permutation networks (there are `nperms_network` of them per
 condition) are never written -- only the observed build:
 
 ```{r list-output}
-list.files(respath_kinase, recursive = TRUE)
+kinase_files <- list.files(respath_kinase, recursive = TRUE)
+length(kinase_files)
+head(kinase_files, n = 2)
 ```
 
 For the paired (golden) path, the folder additionally nests under a
 `uka`-named subfolder (since output there depends on both `uka` and `sens`):
 
 ```{r list-output-paired}
-list.files(respath_full, recursive = TRUE)
+full_files <- list.files(respath_full, recursive = TRUE)
+length(full_files)
+head(full_files, n = 2)
 ```
 
 ## Safety guard for large grids

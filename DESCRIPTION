@@ -31,6 +31,7 @@ Suggests:
     furrr,
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    base64enc
 Config/testthat/edition: 3
 VignetteBuilder: knitr
