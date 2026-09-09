@@ -13,13 +13,14 @@ plot_score_comparison(
 \arguments{
 \item{respaths}{A named character vector (or named list) of result
 folder paths -- names are the aliases shown as facet titles, values are
-the folder paths to search (each searched recursively for
-\code{results.csv} files, so either a single grid-combination folder or a
-base \code{respath} covering many combinations works). Facets appear in the
-order given here, not alphabetically.}
+the folder paths to read (each searched recursively for \code{results.csv}
+files, so pointing at a base \code{respath} covering several combinations
+also works, \emph{provided} it doesn't produce more than one row for the
+same \code{Comparison} -- see Details). Facets appear in the order given
+here, not alphabetically.}
 
 \item{metrics}{Character vector of score columns to compare, shown as
-different colors within each box group. Default \code{score_sig_network}/
+different colors within each bar group. Default \code{score_sig_network}/
 \code{score_sig_network_inv}.}
 
 \item{sig_threshold}{Numeric, or \code{NULL} to omit. Draws a dashed
@@ -28,27 +29,38 @@ conventional significance cutoff for these permutation-test p-values).}
 }
 \value{
 A \code{ggplot} object (not saved to disk -- call \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}
-on the result if you want a file).
+on the result if you want a file). The object has no size of its own --
+with several folders and/or many comparisons, the default plot device
+size (e.g. a knitr chunk's default \code{fig.width}/\code{fig.height}) is usually
+too small and crowds the facets/labels; size explicitly for the number
+of folders and comparisons involved, e.g. \code{fig.width = 4 * n_folders}
+in a chunk, or \code{ggplot2::ggsave(..., width = 4 * n_folders, height = 6)}.
 }
 \description{
-Reads every \code{results.csv} found (recursively -- so a folder can be a
-single grid combination, or a whole multi-combination run) under each
-given result folder, and plots \code{score_sig_network}/\code{score_sig_network_inv}
-(by default) as boxplots per \code{Comparison}, one facet per folder, so the
-\emph{same} comparisons across \emph{different} grid combinations -- different runs,
-different \code{respath}s -- can be compared side by side. Within one facet,
-each box's spread comes from however many grid combinations exist inside
-that folder (e.g. several \code{b}/\code{spec_cutoff} subfolders under one base
-\code{respath}) -- a single-combination folder gives a one-point "box".
+Reads the \code{results.csv} under each given result folder and plots
+\code{score_sig_network}/\code{score_sig_network_inv} (by default) as bars per
+\code{Comparison}, one facet per folder -- for comparing the \emph{same}
+comparisons across \emph{different} parameter combinations or entirely
+separate runs, one folder per combination (matching how
+\code{\link[networkGen:run_network_grid]{networkGen::run_network_grid()}}/\code{\link[=make_golden_score_kinase]{make_golden_score_kinase()}}/
+\code{\link[=make_golden_score_full]{make_golden_score_full()}} lay out output: one folder per distinct
+combination).
 }
 \details{
+Each folder is expected to represent exactly \emph{one} parameter combination
+-- one row per \code{Comparison} -- so each bar has one real value behind it,
+not an aggregate. If a folder's \code{results.csv} (or several found under it)
+has more than one row for the same \code{Comparison}, this is refused with a
+clear \code{stop()} naming the folder and the repeated comparison, rather than
+silently plotting a bar that doesn't represent a single combination.
+
 Only \code{Comparison} values present in \emph{every} listed folder are plotted --
-the point of this plot is comparing the same comparisons across grid
+the point of this plot is comparing the same comparisons across
 combinations, so a comparison missing from even one folder would leave a
 misleading gap in that folder's facet. If any folder has comparisons the
-others don't, those are silently dropped and a message reports what was
-excluded and from where. If no \code{Comparison} is common to every folder at
-all, this is refused with \code{stop()} rather than silently producing an
-empty plot -- almost always an accidental folder selection (e.g. two
-unrelated runs), not an intended empty result.
+others don't, those are dropped and a message reports what was excluded
+and from where. If no \code{Comparison} is common to every folder at all, this
+is refused with \code{stop()} rather than silently producing an empty plot --
+almost always an accidental folder selection (e.g. two unrelated runs),
+not an intended empty result.
 }

@@ -26,16 +26,26 @@ test_that("plot_score_comparison facets by alias, in the order given, with all c
   expect_equal(nrow(p$data), 8)
 })
 
-test_that("plot_score_comparison finds results.csv recursively under a multi-combination folder", {
+test_that("plot_score_comparison errors clearly when a folder covers more than one combination for the same comparison", {
   base_dir <- file.path(tempdir(), "compare_nested")
   unlink(base_dir, recursive = TRUE)
   make_results_csv(file.path(base_dir, "b50"), "condA", 0.1, 0.2)
   make_results_csv(file.path(base_dir, "b75"), "condA", 0.3, 0.4)
 
+  expect_error(
+    plot_score_comparison(c(run1 = base_dir)),
+    "more than one row for comparison"
+  )
+})
+
+test_that("plot_score_comparison works when a folder's single results.csv sits one level down", {
+  base_dir <- file.path(tempdir(), "compare_single_nested")
+  unlink(base_dir, recursive = TRUE)
+  make_results_csv(file.path(base_dir, "thr_1_perc0.5_b50"), c("condA", "condB"), c(0.1, 0.2), c(0.3, 0.4))
+
   p <- plot_score_comparison(c(run1 = base_dir))
 
-  # Both b50 and b75 rows found and combined -- 2 rows x 2 metrics = 4
-  expect_equal(nrow(p$data), 4)
+  expect_setequal(unique(p$data$Comparison), c("condA", "condB"))
 })
 
 test_that("plot_score_comparison drops comparisons not common to every folder, with a message", {
