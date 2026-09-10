@@ -10,7 +10,8 @@ make_golden_score_kinase(
   perc_cutoff,
   respath,
   ppi_network,
-  b,
+  b = 2,
+  w = 2,
   nperms_network = 50,
   rank_uka_abs = TRUE,
   cs = NULL,
@@ -21,8 +22,10 @@ make_golden_score_kinase(
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
 
-\item{spec_cutoff, perc_cutoff, b, rank_uka_abs}{Vectors -- every combination
-is scored, not just the ones a particular caller happens to compare.}
+\item{spec_cutoff, perc_cutoff, b, w, rank_uka_abs}{Vectors -- every
+combination is scored, not just the ones a particular caller happens to
+compare. \code{b}/\code{w} are the PCSF cost knobs (see
+\code{\link[networkGen:generate_kinase_network]{networkGen::generate_kinase_network()}}); both default 2.}
 
 \item{respath}{Base output directory. Each combination gets its own
 parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}})
@@ -47,13 +50,13 @@ run, not a time estimate. Raise explicitly if the size is actually
 intended. Default 500.}
 
 \item{...}{Passed to every build, uniform across the whole grid (not
-gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
+gridded) -- e.g. \code{n}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
 A list: \code{results} (one row per \code{Comparison} x every grid
 combination, across every folder -- \code{Comparison} is the condition/
 contrast label, e.g. \code{"DrugA_vs_DMSO"}; \code{spec_cutoff}/\code{perc_cutoff}/\code{b}/
-\code{rank_uka_abs}/\code{ppi_network} each appear as a column only if that
+\code{w}/\code{rank_uka_abs}/\code{ppi_network} each appear as a column only if that
 dimension actually varies across this call's grid, see
 \code{\link[=drop_constant_grid_columns]{drop_constant_grid_columns()}}), \code{logs}.
 }

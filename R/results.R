@@ -18,8 +18,8 @@ initialize_or_read_df <- function(respath, dfname) {
 
 #' Drop grid-parameter columns that don't actually vary across a result set
 #'
-#' `make_golden_score_kinase()`/`make_golden_score_full()` record all five
-#' grid dimensions (`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`,
+#' `make_golden_score_kinase()`/`make_golden_score_full()` record all six
+#' grid dimensions (`spec_cutoff`, `perc_cutoff`, `b`, `w`, `rank_uka_abs`,
 #' `ppi_network`) on every row, regardless of whether a particular call
 #' actually gridded that dimension -- most calls fix most of them at a
 #' single value. A column that's constant across every row is noise, not
@@ -35,13 +35,13 @@ initialize_or_read_df <- function(respath, dfname) {
 #'   [make_golden_score_kinase()]/[make_golden_score_full()], after
 #'   combining every folder's rows).
 #' @param grid_cols Character vector of column names to consider dropping
-#'   if constant. Default the five `networkGen`/`networkScore` grid
+#'   if constant. Default the six `networkGen`/`networkScore` grid
 #'   dimensions.
 #'
 #' @return `results`, with any of `grid_cols` removed if it has at most one
 #'   distinct (non-missing) value across all rows.
 #' @export
-drop_constant_grid_columns <- function(results, grid_cols = c("spec_cutoff", "perc_cutoff", "b", "rank_uka_abs", "ppi_network")) {
+drop_constant_grid_columns <- function(results, grid_cols = c("spec_cutoff", "perc_cutoff", "b", "w", "rank_uka_abs", "ppi_network")) {
   constant <- vapply(grid_cols, function(col) {
     if (!col %in% colnames(results)) {
       return(FALSE)

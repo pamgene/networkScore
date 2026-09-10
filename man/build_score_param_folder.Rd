@@ -15,7 +15,7 @@ The folder name, as a string.
 \description{
 Composes \code{\link[networkGen:build_param_folder]{networkGen::build_param_folder()}} (the \code{networkGen}-native
 components: \code{uka}/\code{sens}/\code{ppi_network}/\code{spec_cutoff}/\code{perc_cutoff}/
-\code{rank_uka_abs}/\code{b}/\code{cs}/\code{art_nodes}) with the scoring-only components
+\code{rank_uka_abs}/\code{b}/\code{w}/\code{cs}/\code{art_nodes}) with the scoring-only components
 this package's own naming needs -- \code{nperms_network}, \code{relative_to}.
 \code{networkGen} deliberately has no knowledge of these (it has no scoring
 concept at all -- see the suite's \code{CONTEXT-MAP.md}), so this composes on

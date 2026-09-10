@@ -4,7 +4,7 @@
 # every permutation build). This isolates score_conditions()'s flattening/
 # regrouping/significance logic from real PCSF and from the specifics of
 # percentile-rank filtering (covered separately in test-data-prep.R).
-mock_generate_fn <- function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, sens = NULL) {
+mock_generate_fn <- function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, sens = NULL, ...) {
   tight <- isTRUE(uka$prize[1] == 1)
   n <- if (tight) 2 else 12
   edges <- data.frame(from = paste0("N", seq_len(n - 1)), to = paste0("N", seq_len(n - 1) + 1))
@@ -18,10 +18,10 @@ mock_uka_top_fn <- function(x, spec_cutoff, rank_uka_abs, perc_cutoff) {
   data.frame(uniprotname = x$uniprotname, prize = 0) # always "loose", regardless of shuffle
 }
 
-make_spec <- function(condition, spec_cutoff = 0, perc_cutoff = 0, respath = NULL, b = 1, rank_uka_abs = TRUE, ppi_network = NULL) {
+make_spec <- function(condition, spec_cutoff = 0, perc_cutoff = 0, respath = NULL, b = 1, w = 2, rank_uka_abs = TRUE, ppi_network = NULL) {
   list(
-    cell_key = paste(condition, spec_cutoff, perc_cutoff, b, rank_uka_abs, sep = "||"),
-    condition = condition, spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b,
+    cell_key = paste(condition, spec_cutoff, perc_cutoff, b, w, rank_uka_abs, sep = "||"),
+    condition = condition, spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w,
     rank_uka_abs = rank_uka_abs, ppi_network = ppi_network, respath = respath,
     uka_filt = data.frame(uniprotname = c("K1", "K2"), prize = 1), # "tight" observed
     uka_cell_all = data.frame(uniprotname = paste0("K", 1:6)),
@@ -73,8 +73,8 @@ test_that("score_conditions keeps cells with the same condition but different sp
 })
 
 test_that("score_conditions returns NA significance when every permutation build fails", {
-  failing_generate_fn <- function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, sens = NULL) {
-    if (isTRUE(uka$prize[1] == 1)) mock_generate_fn(uka, condition, spec_cutoff, b, ppi_network, write, sens) else NULL
+  failing_generate_fn <- function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, sens = NULL, ...) {
+    if (isTRUE(uka$prize[1] == 1)) mock_generate_fn(uka, condition, spec_cutoff, b, w, ppi_network, write, sens) else NULL
   }
 
   specs <- list(make_spec("cond_A"))
@@ -88,9 +88,9 @@ test_that("score_conditions returns NA significance when every permutation build
 
 test_that("score_conditions writes the observed build (write=TRUE, res.path=spec$respath) but never a permutation build", {
   captured_calls <- list()
-  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, res.path = NULL, sens = NULL) {
+  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, res.path = NULL, sens = NULL, ...) {
     captured_calls[[length(captured_calls) + 1]] <<- list(tight = isTRUE(uka$prize[1] == 1), write = write, res.path = res.path)
-    mock_generate_fn(uka, condition, spec_cutoff, b, ppi_network, write, sens)
+    mock_generate_fn(uka, condition, spec_cutoff, b, w, ppi_network, write, sens)
   }
 
   score_conditions(
@@ -112,9 +112,9 @@ test_that("score_conditions writes the observed build (write=TRUE, res.path=spec
 
 test_that("score_conditions never writes any build when respath is not given on the spec (default, matches previous behavior)", {
   captured_writes <- c()
-  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, res.path = NULL, sens = NULL) {
+  capturing_generate_fn <- function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, res.path = NULL, sens = NULL, ...) {
     captured_writes <<- c(captured_writes, write)
-    mock_generate_fn(uka, condition, spec_cutoff, b, ppi_network, write, sens)
+    mock_generate_fn(uka, condition, spec_cutoff, b, w, ppi_network, write, sens)
   }
 
   score_conditions(
@@ -127,9 +127,9 @@ test_that("score_conditions never writes any build when respath is not given on 
 
 test_that("score_conditions includes sens in build args when paired = TRUE", {
   captured_args <- list()
-  capturing_generate_fn <- function(uka, sens, condition, spec_cutoff, b, ppi_network = NULL, write) {
+  capturing_generate_fn <- function(uka, sens, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, ...) {
     captured_args[[length(captured_args) + 1]] <<- sens
-    mock_generate_fn(uka, condition, spec_cutoff, b, ppi_network, write)
+    mock_generate_fn(uka, condition, spec_cutoff, b, w, ppi_network, write)
   }
 
   spec <- make_spec("cond_A")

@@ -346,11 +346,12 @@ score for a condition’s PCSF network – either kinase-only, or paired
 with sensitivity data (“golden score”). Every network build goes through
 <code>networkGen</code> (see <code>vignette(&quot;networkGen&quot;)</code> for how
 a network is built and its parameters). <code>spec_cutoff</code>,
-<code>perc_cutoff</code>, <code>b</code>, <code>rank_uka_abs</code>, and
-<code>ppi_network</code> can all be tuned as vectors here – every
-combination gets scored, not just the ones a particular call happens to
-compare. Additional arguments (e.g. <code>n</code>, the number of PCSF
-randomized runs) apply uniformly to every build, not gridded.</p>
+<code>perc_cutoff</code>, <code>b</code>, <code>w</code>,
+<code>rank_uka_abs</code>, and <code>ppi_network</code> can all be tuned
+as vectors here – every combination gets scored, not just the ones a
+particular call happens to compare. Additional arguments (e.g.
+<code>n</code>, the number of PCSF randomized runs) apply uniformly to
+every build, not gridded.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(networkGen)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -404,17 +405,19 @@ and much faster for an example):</p>
 <h2>Kinase-only score</h2>
 <p><code>nperms_network</code> is kept small here (2) for a fast-running
 example; use 50+ for a real analysis. <code>n = 2</code> likewise trims
-PCSF’s own randomized-run count per build (default 8) for speed – passed
-through via <code>...</code>, uniformly to every build, not gridded.
-<code>b = 50</code> clears PCSF’s terminal-inclusion threshold for this
-data’s percentile-rank-scale prizes (see
-<code>vignette(&quot;networkGen&quot;)</code>’s “Key parameters” section for the
-<code>b</code>/<code>w</code> economics). <code>perc_cutoff</code>
-<strong>and</strong> <code>b</code> are both vectors here – every
-combination is scored, gridded against every condition (not just
-<code>spec_cutoff</code>/<code>perc_cutoff</code>;
-<code>rank_uka_abs</code> and <code>ppi_network</code> grid the same
-way, see above):</p>
+PCSF’s own randomized-run count per build (default 8) for speed.
+<code>b = c(50, 75)</code> and <code>w = 10</code> are far above their
+defaults of <code>2</code> because <code>toy_uka</code> is 8 genes drawn
+<em>at random</em> from the reference network – an unrelated set that
+only knits into a network when prizes and the root-connection cost are
+pushed hard (see <code>vignette(&quot;networkGen&quot;)</code>’s “How PCSF builds
+a network” section). Real kinase hits from one comparison are
+biologically related and usually score fine at the defaults.
+<code>perc_cutoff</code> <strong>and</strong> <code>b</code> are both
+vectors here – every combination is scored, gridded against every
+condition (<code>spec_cutoff</code>, <code>w</code>,
+<code>rank_uka_abs</code>, <code>ppi_network</code> grid the same way,
+see above):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>respath_kinase <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="st">&quot;kinase_score_&quot;</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">dir.create</span>(respath_kinase)</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
@@ -424,65 +427,65 @@ way, see above):</p>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">perc_cutoff =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.7</span>),</span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins,</span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">b =</span> <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">75</span>),</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">respath =</span> respath_kinase,</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">nperms_network =</span> <span class="dv">2</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">2</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>)</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; Running kinase-only golden score analysis...</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; Grid has 8 condition x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_41b41b3f4544/thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2&quot;</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.5                    </span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_41b41b3f4544/thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b75_cs0_nperms2&quot;</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.5                    </span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_41b41b3f4544/thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2&quot;</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.7                    </span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_41b41b3f4544/thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b75_cs0_nperms2&quot;</span></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
-<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.7                    </span></span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
-<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">w =</span> <span class="dv">10</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">respath =</span> respath_kinase,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">nperms_network =</span> <span class="dv">2</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">2</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; Running kinase-only golden score analysis...</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; Grid has 8 condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_24ac6ca41a4f/thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2&quot;</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.5                    </span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_24ac6ca41a4f/thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b75_w10_cs0_nperms2&quot;</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.5                    </span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_24ac6ca41a4f/thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2&quot;</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.7                    </span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_24ac6ca41a4f/thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b75_w10_cs0_nperms2&quot;</span></span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.7                    </span></span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
 <span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
 <span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
@@ -507,13 +510,13 @@ way, see above):</p>
 <span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
 <span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 4.06015181541443&quot;</span></span>
-<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 16.9167520999908&quot;</span></span>
 <span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
 <span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
@@ -538,13 +541,13 @@ way, see above):</p>
 <span id="cb3-121"><a href="#cb3-121" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-122"><a href="#cb3-122" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
 <span id="cb3-123"><a href="#cb3-123" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-124"><a href="#cb3-124" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb3-125"><a href="#cb3-125" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 2.53461098670959&quot;</span></span>
-<span id="cb3-126"><a href="#cb3-126" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb3-127"><a href="#cb3-127" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb3-128"><a href="#cb3-128" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb3-129"><a href="#cb3-129" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-130"><a href="#cb3-130" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-124"><a href="#cb3-124" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-125"><a href="#cb3-125" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb3-126"><a href="#cb3-126" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb3-127"><a href="#cb3-127" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb3-128"><a href="#cb3-128" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb3-129"><a href="#cb3-129" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb3-130"><a href="#cb3-130" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 11.3506999015808&quot;</span></span>
 <span id="cb3-131"><a href="#cb3-131" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
 <span id="cb3-132"><a href="#cb3-132" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-133"><a href="#cb3-133" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
@@ -569,13 +572,13 @@ way, see above):</p>
 <span id="cb3-152"><a href="#cb3-152" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-153"><a href="#cb3-153" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
 <span id="cb3-154"><a href="#cb3-154" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-155"><a href="#cb3-155" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb3-156"><a href="#cb3-156" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 2.7935848236084&quot;</span></span>
-<span id="cb3-157"><a href="#cb3-157" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb3-158"><a href="#cb3-158" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb3-159"><a href="#cb3-159" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb3-160"><a href="#cb3-160" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-161"><a href="#cb3-161" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-155"><a href="#cb3-155" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-156"><a href="#cb3-156" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb3-157"><a href="#cb3-157" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb3-158"><a href="#cb3-158" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb3-159"><a href="#cb3-159" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb3-160"><a href="#cb3-160" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb3-161"><a href="#cb3-161" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 11.3867249488831&quot;</span></span>
 <span id="cb3-162"><a href="#cb3-162" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
 <span id="cb3-163"><a href="#cb3-163" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-164"><a href="#cb3-164" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
@@ -600,8 +603,13 @@ way, see above):</p>
 <span id="cb3-183"><a href="#cb3-183" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
 <span id="cb3-184"><a href="#cb3-184" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
 <span id="cb3-185"><a href="#cb3-185" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb3-186"><a href="#cb3-186" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb3-187"><a href="#cb3-187" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 2.5342960357666&quot;</span></span></code></pre></div>
+<span id="cb3-186"><a href="#cb3-186" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb3-187"><a href="#cb3-187" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb3-188"><a href="#cb3-188" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb3-189"><a href="#cb3-189" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb3-190"><a href="#cb3-190" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb3-191"><a href="#cb3-191" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb3-192"><a href="#cb3-192" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 10.9078588485718&quot;</span></span></code></pre></div>
 <p>(<code>result$results</code>, the main output, is shown under
 “Reading results” below.)</p>
 </div>
@@ -643,107 +651,110 @@ to it:</p>
 <span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">uka_fam =</span> toy_uka_fam,</span>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins,</span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">b =</span> <span class="dv">50</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">respath =</span> respath_full,</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">nperms_overlap =</span> <span class="dv">20</span>,</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">nperms_network =</span> <span class="dv">2</span>,</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">2</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>)</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Running full golden score analysis (UKA + sensitivity)...</span></span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Grid has 2 cell x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells (after matching sensitivity data)</span></span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\golden_score_41b4773a5e3a/uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2&quot;</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.5                    </span></span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt; 7 sens           sens                   </span></span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\golden_score_41b4773a5e3a/uka/sens_thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2&quot;</span></span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.7                    </span></span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
-<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt; 7 sens           sens                   </span></span>
-<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
-<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
-<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   3</span></span>
-<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       2</span></span>
-<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   4</span></span>
-<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity              1</span></span>
-<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt; 3 Sensitivity-Kinase       1</span></span>
-<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   4</span></span>
-<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity              1</span></span>
-<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a><span class="co">#&gt; 3 Sensitivity-Kinase       1</span></span>
-<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score: 0.25&quot;</span></span>
-<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score family: 1&quot;</span></span>
-<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 1.9801230430603&quot;</span></span>
-<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
-<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
-<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
-<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
-<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
-<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
-<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
-<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
-<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score: 0.5&quot;</span></span>
-<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score family: 1&quot;</span></span>
-<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 1.92938494682312&quot;</span></span></code></pre></div>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">w =</span> <span class="dv">10</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">respath =</span> respath_full,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">nperms_overlap =</span> <span class="dv">20</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="at">nperms_network =</span> <span class="dv">2</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">2</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>)</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Running full golden score analysis (UKA + sensitivity)...</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Grid has 2 cell x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells (after matching sensitivity data)</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\golden_score_24ac2dc47aa3/uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2&quot;</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;    parameter      value                  </span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt;  1 spec_cutoff    1                      </span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt;  2 perc_cutoff    0.5                    </span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt;  3 b              50                     </span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt;  4 w              10                     </span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt;  5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt;  6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt;  7 uka            uka                    </span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt;  8 sens           sens                   </span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt;  9 nperms_network 2                      </span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; 10 cs             FALSE                  </span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\golden_score_24ac2dc47aa3/uka/sens_thr_1_perc0.7_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2&quot;</span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt;    parameter      value                  </span></span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt;  1 spec_cutoff    1                      </span></span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt;  2 perc_cutoff    0.7                    </span></span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt;  3 b              50                     </span></span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="co">#&gt;  4 w              10                     </span></span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt;  5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="co">#&gt;  6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a><span class="co">#&gt;  7 uka            uka                    </span></span>
+<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a><span class="co">#&gt;  8 sens           sens                   </span></span>
+<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a><span class="co">#&gt;  9 nperms_network 2                      </span></span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="co">#&gt; 10 cs             FALSE                  </span></span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   3</span></span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       2</span></span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   4</span></span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity              1</span></span>
+<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="co">#&gt; 3 Sensitivity-Kinase       1</span></span>
+<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   4</span></span>
+<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity              1</span></span>
+<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a><span class="co">#&gt; 3 Sensitivity-Kinase       1</span></span>
+<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score: 0.25&quot;</span></span>
+<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score family: 1&quot;</span></span>
+<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 8.78938698768616&quot;</span></span>
+<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
+<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
+<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
+<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
+<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a><span class="co">#&gt;   type               n_nodes</span></span>
+<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                &lt;int&gt;</span></span>
+<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a><span class="co">#&gt; 1 Kinase                   2</span></span>
+<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a><span class="co">#&gt; 2 Sensitivity-Kinase       1</span></span>
+<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb5-114"><a href="#cb5-114" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score: 0.5&quot;</span></span>
+<span id="cb5-115"><a href="#cb5-115" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Cell: DrugA, overlap score family: 1&quot;</span></span>
+<span id="cb5-116"><a href="#cb5-116" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 8.60687708854675&quot;</span></span></code></pre></div>
 <p>(<code>result_full$results</code> is shown under “Reading results”
 below, alongside the kinase-only table.)</p>
 </div>
@@ -754,7 +765,7 @@ main output of this package – has one row per <code>Comparison</code>
 (the condition/contrast being scored, e.g. <code>&quot;DrugA_vs_DMSO&quot;</code>)
 x every grid parameter, plus the output scores. Only the parameters this
 particular call actually grids show up as columns –
-<code>spec_cutoff</code>/<code>perc_cutoff</code>/<code>b</code>/<code>rank_uka_abs</code>/<code>ppi_network</code>
+<code>spec_cutoff</code>/<code>perc_cutoff</code>/<code>b</code>/<code>w</code>/<code>rank_uka_abs</code>/<code>ppi_network</code>
 each appear only if that dimension has more than one value in this run;
 a parameter fixed at a single value is dropped, since a constant column
 carries no information. Lower scores mean more significant
@@ -1001,7 +1012,7 @@ kinase-only run above:</p>
 <div id="output-one-folder-per-grid-combination" class="section level2">
 <h2>Output: one folder per grid combination</h2>
 <p><code>respath</code> above is just a base directory. Each distinct
-<code>(spec_cutoff, perc_cutoff, b, rank_uka_abs, ppi_network)</code>
+<code>(spec_cutoff, perc_cutoff, b, w, rank_uka_abs, ppi_network)</code>
 combination gets its <strong>own</strong> folder, same as plain
 generation with <code>networkGen</code>: the kinase example above grids
 2 <code>perc_cutoff</code> values x 2 <code>b</code> values, so 4
@@ -1019,8 +1030,8 @@ condition) are never written – only the observed build:</p>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">length</span>(kinase_files)</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [1] 60</span></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="fu">head</span>(kinase_files, <span class="at">n =</span> <span class="dv">2</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2/edges_DrugA_vs_DMSO_spec1.csv&quot;</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2/edges_DrugB_vs_DMSO_spec1.csv&quot;</span></span></code></pre></div>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2/edges_DrugA_vs_DMSO_spec1.csv&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2/edges_DrugB_vs_DMSO_spec1.csv&quot;</span></span></code></pre></div>
 <p>For the paired (golden) path, the folder additionally nests under a
 <code>uka</code>-named subfolder (since output there depends on both
 <code>uka</code> and <code>sens</code>):</p>
@@ -1028,8 +1039,8 @@ condition) are never written – only the observed build:</p>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">length</span>(full_files)</span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; [1] 24</span></span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">head</span>(full_files, <span class="at">n =</span> <span class="dv">2</span>)</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2/edges_DrugA_spec1.csv&quot;</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2/log_time.txt&quot;</span></span></code></pre></div>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2/edges_DrugA_spec1.csv&quot;</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;uka/sens_thr_1_perc0.5_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2/log_time.txt&quot;</span></span></code></pre></div>
 </div>
 <div id="comparing-scores-across-separate-runs" class="section level2">
 <h2>Comparing scores across separate runs</h2>
@@ -1051,107 +1062,109 @@ combinations, not one combination itself):</p>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">dir.create</span>(respath_b50)</span>
 <span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>result_b50 <span class="ot">&lt;-</span> <span class="fu">make_golden_score</span>(</span>
 <span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">uka =</span> toy_uka, <span class="at">spec_cutoff =</span> <span class="fl">1.0</span>, <span class="at">perc_cutoff =</span> <span class="fl">0.6</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins, <span class="at">b =</span> <span class="dv">50</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins, <span class="at">b =</span> <span class="dv">50</span>, <span class="at">w =</span> <span class="dv">10</span>,</span>
 <span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">respath =</span> respath_b50, <span class="at">nperms_network =</span> <span class="dv">2</span>, <span class="at">n =</span> <span class="dv">2</span></span>
 <span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>)</span>
 <span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; Running kinase-only golden score analysis...</span></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; Grid has 2 condition x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_b50_41b468ba5555/thr_1_perc0.6_ppi_networkv12_502_kins_ukaabs1_b50_cs0_nperms2&quot;</span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; Grid has 2 condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_b50_24ac647943b0/thr_1_perc0.6_ppi_networkv12_502_kins_ukaabs1_b50_w10_cs0_nperms2&quot;</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
 <span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
 <span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
 <span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.6                    </span></span>
 <span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; 3 b              50                     </span></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 2.72591519355774&quot;</span></span>
-<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a></span>
-<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>respath_b75 <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="st">&quot;kinase_score_b75_&quot;</span>)</span>
-<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="fu">dir.create</span>(respath_b75)</span>
-<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>result_b75 <span class="ot">&lt;-</span> <span class="fu">make_golden_score</span>(</span>
-<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>  <span class="at">uka =</span> toy_uka, <span class="at">spec_cutoff =</span> <span class="fl">1.0</span>, <span class="at">perc_cutoff =</span> <span class="fl">0.6</span>,</span>
-<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins, <span class="at">b =</span> <span class="dv">75</span>,</span>
-<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>  <span class="at">respath =</span> respath_b75, <span class="at">nperms_network =</span> <span class="dv">2</span>, <span class="at">n =</span> <span class="dv">2</span></span>
-<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a>)</span>
-<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a><span class="co">#&gt; Running kinase-only golden score analysis...</span></span>
-<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a><span class="co">#&gt; Grid has 2 condition x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells</span></span>
-<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpeuCBsX\\kinase_score_b75_41b424851221/thr_1_perc0.6_ppi_networkv12_502_kins_ukaabs1_b75_cs0_nperms2&quot;</span></span>
-<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
-<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
-<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
-<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
-<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.6                    </span></span>
-<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
-<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a><span class="co">#&gt; 4 rank_uka_abs   TRUE                   </span></span>
-<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a><span class="co">#&gt; 5 ppi_network    ppi_networkv12_502_kins</span></span>
-<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a><span class="co">#&gt; 6 uka            uka                    </span></span>
-<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a><span class="co">#&gt; 7 nperms_network 2                      </span></span>
-<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a><span class="co">#&gt; 8 cs             FALSE                  </span></span>
-<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-92"><a href="#cb8-92" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-93"><a href="#cb8-93" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-94"><a href="#cb8-94" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-95"><a href="#cb8-95" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-96"><a href="#cb8-96" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-97"><a href="#cb8-97" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-98"><a href="#cb8-98" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-99"><a href="#cb8-99" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
-<span id="cb8-100"><a href="#cb8-100" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
-<span id="cb8-101"><a href="#cb8-101" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
-<span id="cb8-102"><a href="#cb8-102" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
-<span id="cb8-103"><a href="#cb8-103" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
-<span id="cb8-104"><a href="#cb8-104" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
-<span id="cb8-105"><a href="#cb8-105" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 2.43401598930359&quot;</span></span></code></pre></div>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 11.6695630550385&quot;</span></span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a></span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a>respath_b75 <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="st">&quot;kinase_score_b75_&quot;</span>)</span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a><span class="fu">dir.create</span>(respath_b75)</span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>result_b75 <span class="ot">&lt;-</span> <span class="fu">make_golden_score</span>(</span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>  <span class="at">uka =</span> toy_uka, <span class="at">spec_cutoff =</span> <span class="fl">1.0</span>, <span class="at">perc_cutoff =</span> <span class="fl">0.6</span>,</span>
+<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins, <span class="at">b =</span> <span class="dv">75</span>, <span class="at">w =</span> <span class="dv">10</span>,</span>
+<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a>  <span class="at">respath =</span> respath_b75, <span class="at">nperms_network =</span> <span class="dv">2</span>, <span class="at">n =</span> <span class="dv">2</span></span>
+<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a>)</span>
+<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a><span class="co">#&gt; Running kinase-only golden score analysis...</span></span>
+<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a><span class="co">#&gt; Grid has 2 condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells</span></span>
+<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a><span class="co">#&gt; [1] &quot;param folder: C:\\Users\\DSCHUL~1\\AppData\\Local\\Temp\\RtmpADvxrl\\kinase_score_b75_24ac43b8885/thr_1_perc0.6_ppi_networkv12_502_kins_ukaabs1_b75_w10_cs0_nperms2&quot;</span></span>
+<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a><span class="co">#&gt;   parameter      value                  </span></span>
+<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;                  </span></span>
+<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a><span class="co">#&gt; 1 spec_cutoff    1                      </span></span>
+<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a><span class="co">#&gt; 2 perc_cutoff    0.6                    </span></span>
+<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a><span class="co">#&gt; 3 b              75                     </span></span>
+<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a><span class="co">#&gt; 4 w              10                     </span></span>
+<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a><span class="co">#&gt; 5 rank_uka_abs   TRUE                   </span></span>
+<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a><span class="co">#&gt; 6 ppi_network    ppi_networkv12_502_kins</span></span>
+<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a><span class="co">#&gt; 7 uka            uka                    </span></span>
+<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a><span class="co">#&gt; 8 nperms_network 2                      </span></span>
+<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a><span class="co">#&gt; 9 cs             FALSE                  </span></span>
+<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-92"><a href="#cb8-92" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-93"><a href="#cb8-93" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-94"><a href="#cb8-94" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-95"><a href="#cb8-95" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-96"><a href="#cb8-96" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-97"><a href="#cb8-97" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-98"><a href="#cb8-98" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-99"><a href="#cb8-99" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-100"><a href="#cb8-100" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-101"><a href="#cb8-101" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2 </span></span>
+<span id="cb8-102"><a href="#cb8-102" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Using fast kinograte...&quot;</span></span>
+<span id="cb8-103"><a href="#cb8-103" tabindex="-1"></a><span class="co">#&gt;   100% of your terminal nodes are included in the interactome</span></span>
+<span id="cb8-104"><a href="#cb8-104" tabindex="-1"></a><span class="co">#&gt;   Solving the PCSF by adding random noise to the edge costs...</span></span>
+<span id="cb8-105"><a href="#cb8-105" tabindex="-1"></a><span class="co">#&gt; Run 1 of 2 </span></span>
+<span id="cb8-106"><a href="#cb8-106" tabindex="-1"></a><span class="co">#&gt; Run 2 of 2</span></span>
+<span id="cb8-107"><a href="#cb8-107" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Run time: 12.3369388580322&quot;</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">plot_score_comparison</span>(<span class="fu">c</span>(<span class="st">&quot;b = 50&quot;</span> <span class="ot">=</span> respath_b50, <span class="st">&quot;b = 75&quot;</span> <span class="ot">=</span> respath_b75))</span></code></pre></div>
 <p><img role="img" aria-label src="data:image/png;base64,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" alt width="100%" /></p>
 <p>Only <code>Comparison</code> values present in <strong>every</strong>
@@ -1170,7 +1183,7 @@ permutations included – would exceed <code>max_tasks</code> (default
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">ppi_network =</span> ppi_networkv12_502_kins, <span class="at">b =</span> <span class="dv">50</span>, <span class="at">respath =</span> respath_kinase,</span>
 <span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">nperms_network =</span> <span class="dv">50</span>, <span class="at">max_tasks =</span> <span class="dv">10</span></span>
 <span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>)</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; Grid has 4 condition x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; Grid has 4 condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells</span></span>
 <span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; Error:</span></span>
 <span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; ! make_golden_score_kinase() would build 204 networks (4 grid cells x (1 observed + 50 permutations)), over max_tasks = 10. Review the grid before proceeding, or pass a higher max_tasks explicitly if this size is actually intended.</span></span></code></pre></div>
 </div>
@@ -1178,11 +1191,11 @@ permutations included – would exceed <code>max_tasks</code> (default
 <h2>Parallel vs. sequential execution</h2>
 <p>Every network needed – one observed plus <code>nperms_network</code>
 permuted, for every condition x <code>spec_cutoff</code> x
-<code>perc_cutoff</code> x <code>b</code> x <code>rank_uka_abs</code> x
-<code>ppi_network</code> combination – is submitted together, so a
-<code>future</code> plan set before calling parallelizes across all of
-it (every condition and every permutation at once, not just across
-conditions):</p>
+<code>perc_cutoff</code> x <code>b</code> x <code>w</code> x
+<code>rank_uka_abs</code> x <code>ppi_network</code> combination – is
+submitted together, so a <code>future</code> plan set before calling
+parallelizes across all of it (every condition and every permutation at
+once, not just across conditions):</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>future<span class="sc">::</span><span class="fu">plan</span>(future<span class="sc">::</span>multisession, <span class="at">workers =</span> <span class="dv">4</span>)</span></code></pre></div>
 <p>Without a plan set, both functions run sequentially – still correct,
 just not parallel.</p>

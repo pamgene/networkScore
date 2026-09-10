@@ -15,10 +15,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 condition's PCSF network -- either kinase-only, or paired with sensitivity
 data ("golden score"). Every network build goes through `networkGen` (see
 `vignette("networkGen")` for how a network is built and its parameters).
-`spec_cutoff`, `perc_cutoff`, `b`, `rank_uka_abs`, and `ppi_network` can all
-be tuned as vectors here -- every combination gets scored, not just the ones
-a particular call happens to compare. Additional arguments (e.g. `n`, the
-number of PCSF randomized runs) apply uniformly to every build, not gridded.
+`spec_cutoff`, `perc_cutoff`, `b`, `w`, `rank_uka_abs`, and `ppi_network`
+can all be tuned as vectors here -- every combination gets scored, not just
+the ones a particular call happens to compare. Additional arguments (e.g.
+`n`, the number of PCSF randomized runs) apply uniformly to every build,
+not gridded.
 
 ```{r setup}
 library(networkGen)
@@ -55,14 +56,15 @@ head(toy_uka)
 
 `nperms_network` is kept small here (2) for a fast-running example; use 50+
 for a real analysis. `n = 2` likewise trims PCSF's own randomized-run count
-per build (default 8) for speed -- passed through via `...`, uniformly to
-every build, not gridded. `b = 50` clears PCSF's terminal-inclusion
-threshold for this data's percentile-rank-scale prizes (see
-`vignette("networkGen")`'s "Key parameters" section for the `b`/`w`
-economics). `perc_cutoff` **and** `b` are both vectors here -- every
-combination is scored, gridded against every condition (not just
-`spec_cutoff`/`perc_cutoff`; `rank_uka_abs` and `ppi_network` grid the same
-way, see above):
+per build (default 8) for speed. `b = c(50, 75)` and `w = 10` are far above
+their defaults of `2` because `toy_uka` is 8 genes drawn *at random* from
+the reference network -- an unrelated set that only knits into a network
+when prizes and the root-connection cost are pushed hard (see
+`vignette("networkGen")`'s "How PCSF builds a network" section). Real
+kinase hits from one comparison are biologically related and usually score
+fine at the defaults. `perc_cutoff` **and** `b` are both vectors here --
+every combination is scored, gridded against every condition (`spec_cutoff`,
+`w`, `rank_uka_abs`, `ppi_network` grid the same way, see above):
 
 ```{r kinase-score}
 respath_kinase <- tempfile("kinase_score_")
@@ -74,6 +76,7 @@ result <- make_golden_score(
   perc_cutoff = c(0.5, 0.7),
   ppi_network = ppi_networkv12_502_kins,
   b = c(50, 75),
+  w = 10,
   respath = respath_kinase,
   nperms_network = 2,
   n = 2
@@ -123,6 +126,7 @@ result_full <- make_golden_score(
   uka_fam = toy_uka_fam,
   ppi_network = ppi_networkv12_502_kins,
   b = 50,
+  w = 10,
   respath = respath_full,
   nperms_overlap = 20,
   nperms_network = 2,
@@ -138,7 +142,7 @@ result_full <- make_golden_score(
 has one row per `Comparison` (the condition/contrast being scored, e.g.
 `"DrugA_vs_DMSO"`) x every grid parameter, plus the output scores. Only the
 parameters this particular call actually grids show up as columns --
-`spec_cutoff`/`perc_cutoff`/`b`/`rank_uka_abs`/`ppi_network` each appear
+`spec_cutoff`/`perc_cutoff`/`b`/`w`/`rank_uka_abs`/`ppi_network` each appear
 only if that dimension has more than one value in this run; a parameter
 fixed at a single value is dropped, since a constant column carries no
 information. Lower scores mean more significant throughout.
@@ -223,7 +227,7 @@ cat(sprintf(
 ## Output: one folder per grid combination
 
 `respath` above is just a base directory. Each distinct `(spec_cutoff,
-perc_cutoff, b, rank_uka_abs, ppi_network)` combination gets its **own**
+perc_cutoff, b, w, rank_uka_abs, ppi_network)` combination gets its **own**
 folder, same as plain generation with `networkGen`: the kinase example
 above grids 2 `perc_cutoff` values x 2 `b` values, so 4 folders, each with
 `results.csv`/`metrics_permutations.csv`/`metrics_observed.csv`, the
@@ -269,7 +273,7 @@ respath_b50 <- tempfile("kinase_score_b50_")
 dir.create(respath_b50)
 result_b50 <- make_golden_score(
   uka = toy_uka, spec_cutoff = 1.0, perc_cutoff = 0.6,
-  ppi_network = ppi_networkv12_502_kins, b = 50,
+  ppi_network = ppi_networkv12_502_kins, b = 50, w = 10,
   respath = respath_b50, nperms_network = 2, n = 2
 )
 
@@ -277,7 +281,7 @@ respath_b75 <- tempfile("kinase_score_b75_")
 dir.create(respath_b75)
 result_b75 <- make_golden_score(
   uka = toy_uka, spec_cutoff = 1.0, perc_cutoff = 0.6,
-  ppi_network = ppi_networkv12_502_kins, b = 75,
+  ppi_network = ppi_networkv12_502_kins, b = 75, w = 10,
   respath = respath_b75, nperms_network = 2, n = 2
 )
 ```
@@ -308,7 +312,7 @@ make_golden_score_kinase(
 ## Parallel vs. sequential execution
 
 Every network needed -- one observed plus `nperms_network` permuted, for
-every condition x `spec_cutoff` x `perc_cutoff` x `b` x `rank_uka_abs` x
+every condition x `spec_cutoff` x `perc_cutoff` x `b` x `w` x `rank_uka_abs` x
 `ppi_network` combination -- is submitted together, so a `future` plan set
 before calling parallelizes across all of it (every condition and every
 permutation at once, not just across conditions):

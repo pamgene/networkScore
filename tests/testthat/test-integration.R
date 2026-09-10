@@ -10,7 +10,7 @@
 # caught by the regular test suite going forward.
 test_that("make_golden_score_kinase's permutation filtering uses the same column contract as the cleaned data it's given", {
   local_mocked_bindings(
-    generate_kinase_network = function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, res.path = NULL) {
+    generate_kinase_network = function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, res.path = NULL, ...) {
       structure(list(
         network = igraph::graph_from_data_frame(data.frame(from = uka$name[1], to = uka$name[min(2, nrow(uka))]), directed = FALSE),
         missing_nodes = NULL
@@ -126,7 +126,7 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
 
 test_that("make_golden_score_kinase gives each (spec_cutoff, perc_cutoff) combination its own output folder", {
   local_mocked_bindings(
-    generate_kinase_network = function(uka, condition, spec_cutoff, b, ppi_network = NULL, write, res.path = NULL) {
+    generate_kinase_network = function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, res.path = NULL, ...) {
       structure(list(
         network = igraph::graph_from_data_frame(data.frame(from = "K1", to = "K2"), directed = FALSE),
         missing_nodes = NULL

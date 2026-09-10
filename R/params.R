@@ -2,7 +2,7 @@
 #'
 #' Composes [networkGen::build_param_folder()] (the `networkGen`-native
 #' components: `uka`/`sens`/`ppi_network`/`spec_cutoff`/`perc_cutoff`/
-#' `rank_uka_abs`/`b`/`cs`/`art_nodes`) with the scoring-only components
+#' `rank_uka_abs`/`b`/`w`/`cs`/`art_nodes`) with the scoring-only components
 #' this package's own naming needs -- `nperms_network`, `relative_to`.
 #' `networkGen` deliberately has no knowledge of these (it has no scoring
 #' concept at all -- see the suite's `CONTEXT-MAP.md`), so this composes on

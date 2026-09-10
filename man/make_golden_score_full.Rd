@@ -13,7 +13,8 @@ make_golden_score_full(
   respath,
   uka_fam,
   ppi_network,
-  b,
+  b = 2,
+  w = 2,
   del_cells = NULL,
   zscore = FALSE,
   best_drug_per_target = NULL,
@@ -35,8 +36,10 @@ make_golden_score_full(
 
 \item{control}{Control condition name, as it appears in UKA's \code{contrast} column.}
 
-\item{spec_cutoff, perc_cutoff, b, rank_uka_abs}{Vectors -- every combination
-is scored, not just the ones a particular caller happens to compare.}
+\item{spec_cutoff, perc_cutoff, b, w, rank_uka_abs}{Vectors -- every
+combination is scored, not just the ones a particular caller happens to
+compare. \code{b}/\code{w} are the PCSF cost knobs (see
+\code{\link[networkGen:generate_paired_network]{networkGen::generate_paired_network()}}); both default 2.}
 
 \item{respath}{Base output directory. Each combination gets its own
 parameter-encoded subfolder under it (see \code{\link[=prepare_score_run_params]{prepare_score_run_params()}})
@@ -77,14 +80,14 @@ calls, and don't count toward this). Raise explicitly if the size is
 actually intended. Default 500.}
 
 \item{...}{Passed to every network build, uniform across the whole grid
-(not gridded) -- e.g. \code{n}, \code{w}, \code{r}, \code{mu}, \code{seed}.}
+(not gridded) -- e.g. \code{n}, \code{r}, \code{mu}, \code{seed}.}
 }
 \value{
 A list: \code{results} (one row per \code{Comparison} x every grid
 combination, across every folder -- \code{Comparison} is the full,
 untruncated "X vs control" contrast label, e.g. \code{"DrugA vs Control"};
 the cell-line-only join key used internally against sensitivity data
-isn't part of the output; \code{spec_cutoff}/\code{perc_cutoff}/\code{b}/
+isn't part of the output; \code{spec_cutoff}/\code{perc_cutoff}/\code{b}/\code{w}/
 \code{rank_uka_abs}/\code{ppi_network} each appear as a column only if that
 dimension actually varies across this call's grid, see
 \code{\link[=drop_constant_grid_columns]{drop_constant_grid_columns()}}), \code{logs}.

@@ -48,7 +48,7 @@ score_conditions <- function(condition_specs, nPerms, generate_fn, uka_top_fn, p
     write_this <- identical(role, "observed") && !is.null(spec$respath)
     args <- c(extra_args, list(
       uka = uka, condition = spec$condition, spec_cutoff = spec$spec_cutoff,
-      b = spec$b, ppi_network = spec$ppi_network, write = write_this
+      b = spec$b, w = spec$w, ppi_network = spec$ppi_network, write = write_this
     ))
     if (write_this) args$res.path <- spec$respath
     if (paired) args$sens <- spec$sens_filt
@@ -179,8 +179,10 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' construction.
 #'
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
-#' @param spec_cutoff,perc_cutoff,b,rank_uka_abs Vectors -- every combination
-#'   is scored, not just the ones a particular caller happens to compare.
+#' @param spec_cutoff,perc_cutoff,b,w,rank_uka_abs Vectors -- every
+#'   combination is scored, not just the ones a particular caller happens to
+#'   compare. `b`/`w` are the PCSF cost knobs (see
+#'   [networkGen::generate_kinase_network()]); both default 2.
 #' @param respath Base output directory. Each combination gets its own
 #'   parameter-encoded subfolder under it (see [prepare_score_run_params()])
 #'   -- `results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`,
@@ -200,17 +202,17 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   run, not a time estimate. Raise explicitly if the size is actually
 #'   intended. Default 500.
 #' @param ... Passed to every build, uniform across the whole grid (not
-#'   gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
+#'   gridded) -- e.g. `n`, `r`, `mu`, `seed`.
 #'
 #' @return A list: `results` (one row per `Comparison` x every grid
 #'   combination, across every folder -- `Comparison` is the condition/
 #'   contrast label, e.g. `"DrugA_vs_DMSO"`; `spec_cutoff`/`perc_cutoff`/`b`/
-#'   `rank_uka_abs`/`ppi_network` each appear as a column only if that
+#'   `w`/`rank_uka_abs`/`ppi_network` each appear as a column only if that
 #'   dimension actually varies across this call's grid, see
 #'   [drop_constant_grid_columns()]), `logs`.
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
-                                      ppi_network, b, nperms_network = 50,
+                                      ppi_network, b = 2, w = 2, nperms_network = 50,
                                       rank_uka_abs = TRUE, cs = NULL, max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
@@ -223,14 +225,14 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 
   grid <- networkGen::build_network_grid(
     uka, clean_fn = function(x) clean_uka_to_kinograte_kinase(x, cs = cs), condition_col = "Sample",
-    spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, rank_uka_abs = rank_uka_abs,
+    spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
     ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label)
   )
   grid <- purrr::map(grid, function(cell) {
-    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$b, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
+    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$b, cell$w, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
     cell
   })
-  cat("Grid has", length(grid), "condition x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells\n")
+  cat("Grid has", length(grid), "condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells\n")
 
   total_tasks <- length(grid) * (1 + nperms_network)
   if (total_tasks > max_tasks) {
@@ -269,11 +271,11 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
       condition_specs <- purrr::map(todo_cells, function(cell) {
         list(
           cell_key = cell$cell_key, condition = cell$condition, spec_cutoff = cell$spec_cutoff,
-          perc_cutoff = cell$perc_cutoff, b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
+          perc_cutoff = cell$perc_cutoff, b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
           uka_filt = cell$uka_filt, uka_cell_all = cell$uka_cell_all, sens_filt = NULL, respath = folder,
           vals_extra = list(
             Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
-            b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
+            b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
             n_kins = nrow(cell$uka_filt)
           )
         )
@@ -319,8 +321,10 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
 #' @param sens Raw sensitivity data frame.
 #' @param control Control condition name, as it appears in UKA's `contrast` column.
-#' @param spec_cutoff,perc_cutoff,b,rank_uka_abs Vectors -- every combination
-#'   is scored, not just the ones a particular caller happens to compare.
+#' @param spec_cutoff,perc_cutoff,b,w,rank_uka_abs Vectors -- every
+#'   combination is scored, not just the ones a particular caller happens to
+#'   compare. `b`/`w` are the PCSF cost knobs (see
+#'   [networkGen::generate_paired_network()]); both default 2.
 #' @param respath Base output directory. Each combination gets its own
 #'   parameter-encoded subfolder under it (see [prepare_score_run_params()])
 #'   -- `results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`,
@@ -350,19 +354,19 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #'   calls, and don't count toward this). Raise explicitly if the size is
 #'   actually intended. Default 500.
 #' @param ... Passed to every network build, uniform across the whole grid
-#'   (not gridded) -- e.g. `n`, `w`, `r`, `mu`, `seed`.
+#'   (not gridded) -- e.g. `n`, `r`, `mu`, `seed`.
 #'
 #' @return A list: `results` (one row per `Comparison` x every grid
 #'   combination, across every folder -- `Comparison` is the full,
 #'   untruncated "X vs control" contrast label, e.g. `"DrugA vs Control"`;
 #'   the cell-line-only join key used internally against sensitivity data
-#'   isn't part of the output; `spec_cutoff`/`perc_cutoff`/`b`/
+#'   isn't part of the output; `spec_cutoff`/`perc_cutoff`/`b`/`w`/
 #'   `rank_uka_abs`/`ppi_network` each appear as a column only if that
 #'   dimension actually varies across this call's grid, see
 #'   [drop_constant_grid_columns()]), `logs`.
 #' @export
 make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff, respath, uka_fam,
-                                    ppi_network, b, del_cells = NULL, zscore = FALSE,
+                                    ppi_network, b = 2, w = 2, del_cells = NULL, zscore = FALSE,
                                     best_drug_per_target = NULL, score_overlap = TRUE, score_network = TRUE,
                                     nperms_overlap = 500, nperms_network = 50,
                                     rank_uka_abs = TRUE, balance = FALSE, cs = NULL, max_tasks = 500, ...) {
@@ -383,7 +387,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
   clean_fn <- function(x) clean_uka_to_kinograte_full(x, spec_cutoff = -Inf, control = control, cs = cs)
   grid <- networkGen::build_network_grid(
     uka, clean_fn = clean_fn, condition_col = "cell_line",
-    spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, rank_uka_abs = rank_uka_abs,
+    spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
     ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label)
   )
 
@@ -391,10 +395,10 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
   if (!is.null(del_cells)) common_cells <- setdiff(common_cells, del_cells)
   grid <- Filter(function(cell) cell$condition %in% common_cells, grid)
   grid <- purrr::map(grid, function(cell) {
-    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$b, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
+    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$b, cell$w, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
     cell
   })
-  cat("Grid has", length(grid), "cell x spec_cutoff x perc_cutoff x b x rank_uka_abs x ppi_network cells (after matching sensitivity data)\n")
+  cat("Grid has", length(grid), "cell x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells (after matching sensitivity data)\n")
 
   total_tasks <- length(grid) * (if (score_network) (1 + nperms_network) else 0)
   if (total_tasks > max_tasks) {
@@ -439,7 +443,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
           cell <- todo_cells[[i]]
           list(
             cell_key = cell$cell_key, condition = cell$condition, spec_cutoff = cell$spec_cutoff,
-            perc_cutoff = cell$perc_cutoff, b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
+            perc_cutoff = cell$perc_cutoff, b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
             uka_filt = cell$uka_filt, uka_cell_all = cell$uka_cell_all, sens_filt = cell_sens[[i]],
             respath = folder, vals_extra = list()
           )
@@ -460,7 +464,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
         sens_filt <- cell_sens[[i]]
         vals <- list(
           Comparison = cell$uka_cell_all$comparison[1], spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
-          b = cell$b, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
+          b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
           n_targets = nrow(sens_filt), n_kins = nrow(cell$uka_filt), max_sens_value = max(sens_filt$LogFC)
         )
 

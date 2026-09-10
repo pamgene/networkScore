@@ -6,7 +6,7 @@
 \usage{
 drop_constant_grid_columns(
   results,
-  grid_cols = c("spec_cutoff", "perc_cutoff", "b", "rank_uka_abs", "ppi_network")
+  grid_cols = c("spec_cutoff", "perc_cutoff", "b", "w", "rank_uka_abs", "ppi_network")
 )
 }
 \arguments{
@@ -15,7 +15,7 @@ drop_constant_grid_columns(
 combining every folder's rows).}
 
 \item{grid_cols}{Character vector of column names to consider dropping
-if constant. Default the five \code{networkGen}/\code{networkScore} grid
+if constant. Default the six \code{networkGen}/\code{networkScore} grid
 dimensions.}
 }
 \value{
@@ -23,8 +23,8 @@ dimensions.}
 distinct (non-missing) value across all rows.
 }
 \description{
-\code{make_golden_score_kinase()}/\code{make_golden_score_full()} record all five
-grid dimensions (\code{spec_cutoff}, \code{perc_cutoff}, \code{b}, \code{rank_uka_abs},
+\code{make_golden_score_kinase()}/\code{make_golden_score_full()} record all six
+grid dimensions (\code{spec_cutoff}, \code{perc_cutoff}, \code{b}, \code{w}, \code{rank_uka_abs},
 \code{ppi_network}) on every row, regardless of whether a particular call
 actually gridded that dimension -- most calls fix most of them at a
 single value. A column that's constant across every row is noise, not
