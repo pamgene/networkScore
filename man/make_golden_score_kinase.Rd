@@ -15,7 +15,7 @@ make_golden_score_kinase(
   nperms_network = 30,
   rank_uka_abs = TRUE,
   cs = NULL,
-  condition_col = "Sgroup_contrast",
+  comparison_col = "Sgroup_contrast",
   max_tasks = 500,
   ...
 )
@@ -44,10 +44,10 @@ network.}
 \item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
 columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 
-\item{condition_col}{Name of the raw UKA column identifying each
-condition/comparison (the same role \code{Sgroup_contrast} plays in
-\code{networkGen::clean_uka_to_kinograte()}). Different Tercen exports name
-it differently -- \code{"Sgroup_contrast"}, \code{"Sample"}, ... Default
+\item{comparison_col}{Name of the raw UKA column identifying each
+comparison, passed through to \code{networkGen::prep_uka()} and
+\code{networkGen::build_network_grid()}. Different Tercen exports name it
+differently -- \code{"Sgroup_contrast"}, \code{"Sample"}, ... Default
 \code{"Sgroup_contrast"}.}
 
 \item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)

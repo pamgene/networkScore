@@ -1,14 +1,18 @@
-#' Clean a raw UKA table for the paired (golden) analysis, keyed by cell line/contrast
+#' Reshape a raw UKA table for the paired (golden) analysis, keyed by cell line
 #'
-#' Handles both "X vs control" and "control vs X" contrast naming, flipping
-#' the statistic's sign when control is on the left. Unlike
-#' `networkGen::clean_uka_to_kinograte1()` (which this is a sibling of), the
-#' output is keyed `cell_line` rather than `Sgroup_contrast`, matching what
-#' [make_golden_score_full()] expects.
+#' The paired counterpart of `networkGen::prep_uka()`. Given a fixed
+#' `control`, it keeps only the comparisons that involve that control
+#' (either "X vs control" or "control vs X"), flips the kinase statistic's
+#' sign when the control is on the left so `LogFC` always reads "treatment
+#' relative to control", and derives `cell_line` -- the non-control side of
+#' each comparison -- as the join key against the sensitivity data. Any
+#' comparison not involving `control` is dropped.
 #'
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
 #' @param spec_cutoff Minimum specificity-score to keep a row.
-#' @param control Name of the control condition as it appears in `contrast`.
+#' @param control Name of the control condition as it appears in `contrast`
+#'   (e.g. `"DMSO"`). Set this to whichever side of every comparison is the
+#'   reference; the other side becomes `cell_line`.
 #' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
 #'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #'
@@ -18,7 +22,7 @@
 #'   sensitivity data's own cell-line identifier, not shown to the user),
 #'   `uniprotname`, `LogFC`, `fscore`.
 #' @export
-clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = NULL) {
+prep_uka_paired <- function(uka, spec_cutoff, control, cs = NULL) {
   if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
   stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
@@ -46,44 +50,9 @@ clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = NULL) {
     dplyr::distinct()
 }
 
-#' Clean a raw UKA table for the kinase-only analysis, keyed by condition
+#' Reshape sensitivity data for the paired (golden) analysis
 #'
-#' The kinase-only counterpart of `networkGen::clean_uka_to_kinograte()`:
-#' same reduction of a raw Tercen UKA export to the shape the grid builder
-#' consumes, differing only in which raw column identifies each condition
-#' (`condition_col`).
-#'
-#' @param uka Raw UKA data frame, Tercen-style dotted column names.
-#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
-#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
-#' @param condition_col Name of the raw column identifying each condition/
-#'   comparison, carried through unchanged to the output. This is the same
-#'   role `Sgroup_contrast` plays in `networkGen::clean_uka_to_kinograte()`;
-#'   different Tercen exports name it differently (`"Sgroup_contrast"`,
-#'   `"Sample"`, ...). Default `"Sgroup_contrast"`. Must match the
-#'   `condition_col` passed to `networkGen::build_network_grid()`.
-#'
-#' @return Data frame with columns `<condition_col>`, `uniprotname`,
-#'   `LogFC`, `fscore`.
-#' @export
-clean_uka_to_kinograte_kinase <- function(uka, cs = NULL, condition_col = "Sgroup_contrast") {
-  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
-  finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
-  stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
-
-  uka %>%
-    networkGen::clean_tercen_columns() %>%
-    dplyr::select(dplyr::all_of(condition_col), "Kinase Name", dplyr::all_of(stat_col), dplyr::all_of(finalscore_col)) %>%
-    dplyr::rename(
-      "uniprotname" = "Kinase Name", "LogFC" = dplyr::all_of(stat_col),
-      "fscore" = dplyr::all_of(finalscore_col)
-    ) %>%
-    dplyr::distinct()
-}
-
-#' Clean sensitivity data for the paired (golden) analysis
-#'
-#' Sibling of `networkGen::clean_sens_to_kinograte()`; this variant renames
+#' Sibling of `networkGen::prep_sens()`; this variant renames
 #' `CELL_LINE_NAME` (rather than expecting a pre-named `cell_line` column)
 #' and can additionally restrict to a preferred drug per target.
 #'
@@ -99,7 +68,7 @@ clean_uka_to_kinograte_kinase <- function(uka, cs = NULL, condition_col = "Sgrou
 #'
 #' @return Data frame with columns `cell_line`, `uniprotname`, `LogFC`.
 #' @export
-clean_sens_to_kinograte <- function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) {
+prep_sens <- function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) {
   sens_filt <- sens %>% dplyr::rename(cell_line = "CELL_LINE_NAME", uniprotname = "TARGET_1")
 
   if (!is.null(best_drug_per_target)) {

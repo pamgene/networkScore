@@ -1,6 +1,6 @@
 # Regression test for a real bug found via end-to-end testing with real PCSF:
 # uka_top_fn (used to re-filter each permutation's shuffled input) was being
-# called on already-cleaned data (clean_uka_to_kinograte_kinase()'s output,
+# called on already-reshaped data (networkGen::prep_uka()'s output,
 # columns Sgroup_contrast/uniprotname/LogFC/fscore), but the old uka_top_kinase()
 # filtered on the raw "Mean Specificity Score"/"Specificity Score" column
 # name -- which no longer exists post-cleaning. Fixed by using
@@ -72,8 +72,8 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
   )
 
   local_mocked_bindings(
-    clean_uka_to_kinograte_full = function(uka, spec_cutoff, control, cs = FALSE) cleaned_uka,
-    clean_sens_to_kinograte = function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) cleaned_sens,
+    prep_uka_paired = function(uka, spec_cutoff, control, cs = FALSE) cleaned_uka,
+    prep_sens = function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) cleaned_sens,
     .package = "networkScore"
   )
 
