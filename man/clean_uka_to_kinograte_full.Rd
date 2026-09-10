@@ -4,7 +4,7 @@
 \alias{clean_uka_to_kinograte_full}
 \title{Clean a raw UKA table for the paired (golden) analysis, keyed by cell line/contrast}
 \usage{
-clean_uka_to_kinograte_full(uka, spec_cutoff, control, cs = FALSE)
+clean_uka_to_kinograte_full(uka, spec_cutoff, control, cs = NULL)
 }
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
@@ -13,8 +13,8 @@ clean_uka_to_kinograte_full(uka, spec_cutoff, control, cs = FALSE)
 
 \item{control}{Name of the control condition as it appears in \code{contrast}.}
 
-\item{cs}{If \code{TRUE}, use the per-comparison specificity columns; if
-\code{FALSE} (default), use the mean/median variants.}
+\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
+columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 }
 \value{
 Data frame with columns \code{cell_line}, \code{comparison} (the full,

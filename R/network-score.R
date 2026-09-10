@@ -192,7 +192,8 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   ppi_networkv12_502_kins)`) to also grid across more than one reference
 #'   network.
 #' @param nperms_network Number of permutations per condition. Default 50.
-#' @param cs If `TRUE`, use the per-comparison specificity column.
+#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
+#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #' @param max_tasks Refuse to proceed (`stop()`, without building anything)
 #'   if the grid, with permutations, expands to more than this many
 #'   networks -- a safety guard against an unintentionally huge overnight
@@ -210,13 +211,15 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b, nperms_network = 50,
-                                      rank_uka_abs = TRUE, cs = FALSE, max_tasks = 500, ...) {
+                                      rank_uka_abs = TRUE, cs = NULL, max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
   # to a generic value placeholder instead of the caller's actual
   # expression (see networkGen::run_network_grid() for the same fix).
   uka_label <- rlang::as_label(rlang::enquo(uka))
   ppi_network_label <- rlang::as_label(rlang::enquo(ppi_network))
+
+  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
 
   grid <- networkGen::build_network_grid(
     uka, clean_fn = function(x) clean_uka_to_kinograte_kinase(x, cs = cs), condition_col = "Sample",
@@ -338,7 +341,8 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #'   (fields left `NA`). Both default `TRUE`.
 #' @param nperms_overlap,nperms_network Number of permutations for each score. Defaults 500, 50.
 #' @param balance If `TRUE`, lowers the sensitivity percentile cutoff by 0.2 (see `networkGen::sens_top()`).
-#' @param cs If `TRUE`, use the per-comparison specificity column.
+#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
+#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #' @param max_tasks Refuse to proceed (`stop()`, without building anything)
 #'   if the grid, with permutations, expands to more than this many PCSF
 #'   builds -- a safety guard against an unintentionally huge overnight run,
@@ -361,12 +365,14 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
                                     ppi_network, b, del_cells = NULL, zscore = FALSE,
                                     best_drug_per_target = NULL, score_overlap = TRUE, score_network = TRUE,
                                     nperms_overlap = 500, nperms_network = 50,
-                                    rank_uka_abs = TRUE, balance = FALSE, cs = FALSE, max_tasks = 500, ...) {
+                                    rank_uka_abs = TRUE, balance = FALSE, cs = NULL, max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # see networkGen::run_network_grid() for why this must happen first.
   uka_label <- rlang::as_label(rlang::enquo(uka))
   sens_label <- rlang::as_label(rlang::enquo(sens))
   ppi_network_label <- rlang::as_label(rlang::enquo(ppi_network))
+
+  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
 
   sens_parsed <- clean_sens_to_kinograte(sens, control = control, zscore = zscore, best_drug_per_target = best_drug_per_target)
 

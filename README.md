@@ -13,12 +13,11 @@ remotes::install_local("path/to/networkGen") # dependency; needs the real PCSF p
 remotes::install_local("path/to/networkScore")
 ```
 
-## Local development (dschuller's machine)
+## Local development notes
 
-See [`networkGen`'s README](../networkGen#local-development-dschullers-machine)
--- on this machine, dev commands must run under R 4.3.0's explicit path
-(the only R install here with a working compiled `PCSF`), not bare
-`Rscript`/`R`.
+See [`networkGen`'s README](../networkGen#local-development-notes) -- dev
+commands must run under whichever R install has a real, compiled `PCSF`
+(check for a `libs/` dir), not necessarily bare `Rscript`/`R`.
 
 ## Getting started
 

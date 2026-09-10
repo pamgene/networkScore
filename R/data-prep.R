@@ -9,8 +9,8 @@
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
 #' @param spec_cutoff Minimum specificity-score to keep a row.
 #' @param control Name of the control condition as it appears in `contrast`.
-#' @param cs If `TRUE`, use the per-comparison specificity columns; if
-#'   `FALSE` (default), use the mean/median variants.
+#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
+#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #'
 #' @return Data frame with columns `cell_line`, `comparison` (the full,
 #'   untruncated "X vs control"/"control vs X" label -- `cell_line` itself
@@ -18,7 +18,8 @@
 #'   sensitivity data's own cell-line identifier, not shown to the user),
 #'   `uniprotname`, `LogFC`, `fscore`.
 #' @export
-clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = FALSE) {
+clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = NULL) {
+  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
   stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
 
@@ -48,12 +49,13 @@ clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = FALSE) {
 #' Clean a raw UKA table for the kinase-only analysis, keyed by condition
 #'
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
-#' @param cs If `TRUE`, use the per-comparison specificity columns; if
-#'   `FALSE` (default), use the mean/median variants.
+#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
+#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #'
 #' @return Data frame with columns `Sample`, `uniprotname`, `LogFC`, `fscore`.
 #' @export
-clean_uka_to_kinograte_kinase <- function(uka, cs = FALSE) {
+clean_uka_to_kinograte_kinase <- function(uka, cs = NULL) {
+  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
   stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
 

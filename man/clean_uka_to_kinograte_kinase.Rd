@@ -4,13 +4,13 @@
 \alias{clean_uka_to_kinograte_kinase}
 \title{Clean a raw UKA table for the kinase-only analysis, keyed by condition}
 \usage{
-clean_uka_to_kinograte_kinase(uka, cs = FALSE)
+clean_uka_to_kinograte_kinase(uka, cs = NULL)
 }
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
 
-\item{cs}{If \code{TRUE}, use the per-comparison specificity columns; if
-\code{FALSE} (default), use the mean/median variants.}
+\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
+columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 }
 \value{
 Data frame with columns \code{Sample}, \code{uniprotname}, \code{LogFC}, \code{fscore}.

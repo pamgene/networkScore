@@ -10,6 +10,26 @@ test_that("clean_uka_to_kinograte_kinase selects and renames columns", {
   expect_equal(colnames(res), c("Sample", "uniprotname", "LogFC", "fscore"))
 })
 
+test_that("clean_uka_to_kinograte_kinase/full auto-detect csUKA columns when cs is NULL (default)", {
+  cs_kinase <- data.frame(
+    `x.Sample` = "cond_A", `x.Kinase Name` = "KIN1",
+    `x.Kinase Statistic` = 1.5, `x.Specificity Score` = 2.0,
+    check.names = FALSE
+  )
+  res_k <- clean_uka_to_kinograte_kinase(cs_kinase)
+  expect_equal(res_k$LogFC, 1.5)
+  expect_equal(res_k$fscore, 2.0)
+
+  cs_full <- data.frame(
+    `x.contrast` = "Treated vs Control", `x.Kinase Name` = "K1",
+    `x.Kinase Statistic` = 1.0, `x.Specificity Score` = 2.0,
+    check.names = FALSE
+  )
+  res_f <- clean_uka_to_kinograte_full(cs_full, spec_cutoff = 0, control = "Control")
+  expect_equal(res_f$fscore, 2.0)
+  expect_equal(res_f$cell_line, "Treated")
+})
+
 test_that("clean_uka_to_kinograte_full flips sign when control is on the left of the contrast", {
   uka <- data.frame(
     `x.contrast` = c("Control vs Treated", "Treated2 vs Control"),

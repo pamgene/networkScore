@@ -13,7 +13,7 @@ make_golden_score_kinase(
   b,
   nperms_network = 50,
   rank_uka_abs = TRUE,
-  cs = FALSE,
+  cs = NULL,
   max_tasks = 500,
   ...
 )
@@ -37,7 +37,8 @@ network.}
 
 \item{nperms_network}{Number of permutations per condition. Default 50.}
 
-\item{cs}{If \code{TRUE}, use the per-comparison specificity column.}
+\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
+columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 
 \item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)
 if the grid, with permutations, expands to more than this many
