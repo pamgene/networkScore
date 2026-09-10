@@ -1,7 +1,7 @@
 # Regression test for a real bug found via end-to-end testing with real PCSF:
 # uka_top_fn (used to re-filter each permutation's shuffled input) was being
 # called on already-cleaned data (clean_uka_to_kinograte_kinase()'s output,
-# columns Sample/uniprotname/LogFC/fscore), but the old uka_top_kinase()
+# columns Sgroup_contrast/uniprotname/LogFC/fscore), but the old uka_top_kinase()
 # filtered on the raw "Mean Specificity Score"/"Specificity Score" column
 # name -- which no longer exists post-cleaning. Fixed by using
 # networkGen::uka_top() (which filters on `fscore`) throughout instead.
@@ -20,7 +20,7 @@ test_that("make_golden_score_kinase's permutation filtering uses the same column
   )
 
   uka <- data.frame(
-    `x.Sample` = rep(c("cond_A", "cond_B"), each = 3),
+    `x.Sgroup_contrast` = rep(c("cond_A", "cond_B"), each = 3),
     `x.Kinase Name` = rep(c("K1", "K2", "K3"), 2),
     `x.Median Kinase Statistic` = c(2.0, -1.5, 0.3, 1.8, -1.2, 0.1),
     `x.Mean Specificity Score` = 2.0,
@@ -136,7 +136,7 @@ test_that("make_golden_score_kinase gives each (spec_cutoff, perc_cutoff) combin
   )
 
   uka <- data.frame(
-    `x.Sample` = rep("cond_A", 3),
+    `x.Sgroup_contrast` = rep("cond_A", 3),
     `x.Kinase Name` = c("K1", "K2", "K3"),
     `x.Median Kinase Statistic` = c(2.0, -1.5, 0.3),
     `x.Mean Specificity Score` = 2.0,
@@ -161,7 +161,7 @@ test_that("make_golden_score_kinase gives each (spec_cutoff, perc_cutoff) combin
 
 test_that("make_golden_score_kinase refuses to proceed when the grid (with permutations) exceeds max_tasks", {
   uka <- data.frame(
-    `x.Sample` = rep(paste0("cond", 1:5), each = 2),
+    `x.Sgroup_contrast` = rep(paste0("cond", 1:5), each = 2),
     `x.Kinase Name` = rep(c("K1", "K2"), 5),
     `x.Median Kinase Statistic` = 1,
     `x.Mean Specificity Score` = 2.0,

@@ -1,4 +1,16 @@
-test_that("clean_uka_to_kinograte_kinase selects and renames columns", {
+test_that("clean_uka_to_kinograte_kinase selects and renames columns, keyed by condition_col (default Sgroup_contrast)", {
+  uka <- data.frame(
+    `x.Sgroup_contrast` = "cond_A",
+    `x.Kinase Name` = "KIN1",
+    `x.Median Kinase Statistic` = 1.5,
+    `x.Mean Specificity Score` = 2.0,
+    check.names = FALSE
+  )
+  res <- clean_uka_to_kinograte_kinase(uka, cs = FALSE)
+  expect_equal(colnames(res), c("Sgroup_contrast", "uniprotname", "LogFC", "fscore"))
+})
+
+test_that("clean_uka_to_kinograte_kinase honours a non-default condition_col", {
   uka <- data.frame(
     `x.Sample` = "cond_A",
     `x.Kinase Name` = "KIN1",
@@ -6,13 +18,13 @@ test_that("clean_uka_to_kinograte_kinase selects and renames columns", {
     `x.Mean Specificity Score` = 2.0,
     check.names = FALSE
   )
-  res <- clean_uka_to_kinograte_kinase(uka, cs = FALSE)
+  res <- clean_uka_to_kinograte_kinase(uka, cs = FALSE, condition_col = "Sample")
   expect_equal(colnames(res), c("Sample", "uniprotname", "LogFC", "fscore"))
 })
 
 test_that("clean_uka_to_kinograte_kinase/full auto-detect csUKA columns when cs is NULL (default)", {
   cs_kinase <- data.frame(
-    `x.Sample` = "cond_A", `x.Kinase Name` = "KIN1",
+    `x.Sgroup_contrast` = "cond_A", `x.Kinase Name` = "KIN1",
     `x.Kinase Statistic` = 1.5, `x.Specificity Score` = 2.0,
     check.names = FALSE
   )

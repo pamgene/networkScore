@@ -32,7 +32,9 @@ Raw UKA (kinase-activity) data, Tercen-style dotted column names, two
 conditions, 8 real genes sampled from the bundled `ppi_networkv12_502_kins`
 (the smallest of the three bundled reference networks -- 502 kinases,
 ~107K edges, vs. 1.1M for the full `ppi_networkv12` -- good enough for a
-kinase-activity network and much faster for an example):
+kinase-activity network and much faster for an example). The condition
+column here is `Sgroup_contrast` (the default); an export that names it
+differently is handled by passing `condition_col`:
 
 ```{r toy-uka}
 set.seed(1)
@@ -40,7 +42,7 @@ real_genes <- sample(unique(c(ppi_networkv12_502_kins$head, ppi_networkv12_502_k
 real_genes
 
 toy_uka <- data.frame(
-  `x.Sample` = rep(c("DrugA_vs_DMSO", "DrugB_vs_DMSO"), each = 8),
+  `x.Sgroup_contrast` = rep(c("DrugA_vs_DMSO", "DrugB_vs_DMSO"), each = 8),
   `x.Kinase Name` = rep(real_genes, 2),
   `x.Median Kinase Statistic` = c(
     c(2.5, -2.0, 1.8, -1.5, 1.2, -1.0, 0.8, -0.5),
@@ -54,8 +56,8 @@ head(toy_uka)
 
 ## Kinase-only score
 
-`nperms_network` is kept small here (2) for a fast-running example; use 50+
-for a real analysis. `n = 2` likewise trims PCSF's own randomized-run count
+`nperms_network` is kept small here (2) for a fast-running example; the
+default (30) or more is appropriate for a real analysis. `n = 2` likewise trims PCSF's own randomized-run count
 per build (default 8) for speed. `b = c(50, 75)` and `w = 10` are far above
 their defaults of `2` because `toy_uka` is 8 genes drawn *at random* from
 the reference network -- an unrelated set that only knits into a network

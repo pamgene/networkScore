@@ -12,9 +12,10 @@ make_golden_score_kinase(
   ppi_network,
   b = 2,
   w = 2,
-  nperms_network = 50,
+  nperms_network = 30,
   rank_uka_abs = TRUE,
   cs = NULL,
+  condition_col = "Sgroup_contrast",
   max_tasks = 500,
   ...
 )
@@ -38,10 +39,16 @@ networks) all land there.}
 fully named list of them (e.g. \code{list(v12 = ppi_networkv12, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
 network.}
 
-\item{nperms_network}{Number of permutations per condition. Default 50.}
+\item{nperms_network}{Number of permutations per condition. Default 30.}
 
 \item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
 columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
+
+\item{condition_col}{Name of the raw UKA column identifying each
+condition/comparison (the same role \code{Sgroup_contrast} plays in
+\code{networkGen::clean_uka_to_kinograte()}). Different Tercen exports name
+it differently -- \code{"Sgroup_contrast"}, \code{"Sample"}, ... Default
+\code{"Sgroup_contrast"}.}
 
 \item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)
 if the grid, with permutations, expands to more than this many

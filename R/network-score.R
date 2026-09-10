@@ -25,6 +25,15 @@
 #'   row, e.g. `n_kins`), `respath` (folder the observed build is written
 #'   into, or `NULL` to not write it -- typically every cell sharing a
 #'   combination shares one folder, from `networkGen::prepare_grid_folders()`).
+#'   Every spec's `ppi_network` must be the same reference network -- callers
+#'   already guarantee this by calling once per output folder, and folders
+#'   are keyed by `ppi_network_name` (see `networkGen::prepare_grid_folders()`).
+#'   It is read once, from the first spec, and handed to
+#'   `networkGen::generate_networks_batch()` as its single shared
+#'   `ppi_network` rather than copied into all
+#'   `length(condition_specs) * (1 + nPerms)` task bundles -- the latter
+#'   serializes a fresh multi-MB copy per task to every `future` worker
+#'   (tens of GiB for a real grid; trips `future.globals.maxSize`).
 #' @param nPerms Number of permutations per cell.
 #' @param generate_fn `networkGen::generate_paired_network` or
 #'   `networkGen::generate_kinase_network`.
@@ -44,11 +53,18 @@
 #' @keywords internal
 score_conditions <- function(condition_specs, nPerms, generate_fn, uka_top_fn, paired = FALSE, ...) {
   extra_args <- list(...)
+  # The reference network is constant across the whole call (see @param
+  # condition_specs) -- pulled out once here and passed to
+  # generate_networks_batch() as its shared `ppi_network`, never placed in
+  # a per-task `args`. Putting it in `args` would serialize one copy per
+  # task to every worker.
+  shared_ppi_network <- if (length(condition_specs) > 0) condition_specs[[1]]$ppi_network else NULL
+
   build_args <- function(uka, spec, role) {
     write_this <- identical(role, "observed") && !is.null(spec$respath)
     args <- c(extra_args, list(
       uka = uka, condition = spec$condition, spec_cutoff = spec$spec_cutoff,
-      b = spec$b, w = spec$w, ppi_network = spec$ppi_network, write = write_this
+      b = spec$b, w = spec$w, write = write_this
     ))
     if (write_this) args$res.path <- spec$respath
     if (paired) args$sens <- spec$sens_filt
@@ -72,7 +88,9 @@ score_conditions <- function(condition_specs, nPerms, generate_fn, uka_top_fn, p
     }
   }
 
-  batch_out <- networkGen::generate_networks_batch(tasks, generate_fn = generate_fn)
+  batch_out <- networkGen::generate_networks_batch(
+    tasks, generate_fn = generate_fn, ppi_network = shared_ppi_network
+  )
 
   stats_rows <- purrr::map(batch_out, function(item) {
     s <- if (is.null(item$result)) {
@@ -193,9 +211,14 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   fully named list of them (e.g. `list(v12 = ppi_networkv12, kins502 =
 #'   ppi_networkv12_502_kins)`) to also grid across more than one reference
 #'   network.
-#' @param nperms_network Number of permutations per condition. Default 50.
+#' @param nperms_network Number of permutations per condition. Default 30.
 #' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
 #'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
+#' @param condition_col Name of the raw UKA column identifying each
+#'   condition/comparison (the same role `Sgroup_contrast` plays in
+#'   `networkGen::clean_uka_to_kinograte()`). Different Tercen exports name
+#'   it differently -- `"Sgroup_contrast"`, `"Sample"`, ... Default
+#'   `"Sgroup_contrast"`.
 #' @param max_tasks Refuse to proceed (`stop()`, without building anything)
 #'   if the grid, with permutations, expands to more than this many
 #'   networks -- a safety guard against an unintentionally huge overnight
@@ -212,8 +235,9 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   [drop_constant_grid_columns()]), `logs`.
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
-                                      ppi_network, b = 2, w = 2, nperms_network = 50,
-                                      rank_uka_abs = TRUE, cs = NULL, max_tasks = 500, ...) {
+                                      ppi_network, b = 2, w = 2, nperms_network = 30,
+                                      rank_uka_abs = TRUE, cs = NULL,
+                                      condition_col = "Sgroup_contrast", max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
   # to a generic value placeholder instead of the caller's actual
@@ -224,7 +248,8 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
   if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
 
   grid <- networkGen::build_network_grid(
-    uka, clean_fn = function(x) clean_uka_to_kinograte_kinase(x, cs = cs), condition_col = "Sample",
+    uka, clean_fn = function(x) clean_uka_to_kinograte_kinase(x, cs = cs, condition_col = condition_col),
+    condition_col = condition_col,
     spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
     ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label)
   )
@@ -343,7 +368,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #'   one drug per target.
 #' @param score_overlap,score_network If `FALSE`, skip that score entirely
 #'   (fields left `NA`). Both default `TRUE`.
-#' @param nperms_overlap,nperms_network Number of permutations for each score. Defaults 500, 50.
+#' @param nperms_overlap,nperms_network Number of permutations for each score. Defaults 500, 30.
 #' @param balance If `TRUE`, lowers the sensitivity percentile cutoff by 0.2 (see `networkGen::sens_top()`).
 #' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
 #'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
@@ -368,7 +393,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff, respath, uka_fam,
                                     ppi_network, b = 2, w = 2, del_cells = NULL, zscore = FALSE,
                                     best_drug_per_target = NULL, score_overlap = TRUE, score_network = TRUE,
-                                    nperms_overlap = 500, nperms_network = 50,
+                                    nperms_overlap = 500, nperms_network = 30,
                                     rank_uka_abs = TRUE, balance = FALSE, cs = NULL, max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # see networkGen::run_network_grid() for why this must happen first.

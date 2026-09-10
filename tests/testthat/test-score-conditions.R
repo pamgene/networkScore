@@ -125,6 +125,40 @@ test_that("score_conditions never writes any build when respath is not given on 
   expect_true(all(!captured_writes))
 })
 
+test_that("score_conditions hands one shared ppi_network to the batch, not a per-task copy", {
+  shared <- data.frame(head = "A", tail = "B", cost = 0.1)
+  specs <- list(
+    make_spec("cond_A", ppi_network = shared),
+    make_spec("cond_B", ppi_network = shared)
+  )
+
+  captured <- NULL
+  testthat::with_mocked_bindings(
+    generate_networks_batch = function(tasks, generate_fn, ppi_network = NULL, extra_args = list(), progress = FALSE) {
+      captured <<- list(
+        n_tasks = length(tasks),
+        any_task_carries_ppi = any(vapply(tasks, function(t) "ppi_network" %in% names(t$args), logical(1))),
+        shared_ppi = ppi_network
+      )
+      lapply(tasks, function(t) list(result = NULL, meta = t$meta))
+    },
+    .package = "networkGen",
+    {
+      score_conditions(
+        specs, nPerms = 2,
+        generate_fn = mock_generate_fn, uka_top_fn = mock_uka_top_fn, paired = FALSE
+      )
+    }
+  )
+
+  # 2 conditions x (1 observed + 2 permutations) = 6 tasks, none of which
+  # embeds the multi-MB reference network in its args; the single shared
+  # network is passed once as generate_networks_batch()'s `ppi_network`.
+  expect_equal(captured$n_tasks, 6)
+  expect_false(captured$any_task_carries_ppi)
+  expect_identical(captured$shared_ppi, shared)
+})
+
 test_that("score_conditions includes sens in build args when paired = TRUE", {
   captured_args <- list()
   capturing_generate_fn <- function(uka, sens, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, ...) {

@@ -28,7 +28,16 @@ kinase-activity rows for this cell, to build permutations from),
 kinase-only), \code{vals_extra} (named list merged into this cell's result
 row, e.g. \code{n_kins}), \code{respath} (folder the observed build is written
 into, or \code{NULL} to not write it -- typically every cell sharing a
-combination shares one folder, from \code{networkGen::prepare_grid_folders()}).}
+combination shares one folder, from \code{networkGen::prepare_grid_folders()}).
+Every spec's \code{ppi_network} must be the same reference network -- callers
+already guarantee this by calling once per output folder, and folders
+are keyed by \code{ppi_network_name} (see \code{networkGen::prepare_grid_folders()}).
+It is read once, from the first spec, and handed to
+\code{networkGen::generate_networks_batch()} as its single shared
+\code{ppi_network} rather than copied into all
+\code{length(condition_specs) * (1 + nPerms)} task bundles -- the latter
+serializes a fresh multi-MB copy per task to every \code{future} worker
+(tens of GiB for a real grid; trips \code{future.globals.maxSize}).}
 
 \item{nPerms}{Number of permutations per cell.}
 

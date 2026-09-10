@@ -21,7 +21,7 @@ make_golden_score_full(
   score_overlap = TRUE,
   score_network = TRUE,
   nperms_overlap = 500,
-  nperms_network = 50,
+  nperms_network = 30,
   rank_uka_abs = TRUE,
   balance = FALSE,
   cs = NULL,
@@ -65,7 +65,7 @@ one drug per target.}
 \item{score_overlap, score_network}{If \code{FALSE}, skip that score entirely
 (fields left \code{NA}). Both default \code{TRUE}.}
 
-\item{nperms_overlap, nperms_network}{Number of permutations for each score. Defaults 500, 50.}
+\item{nperms_overlap, nperms_network}{Number of permutations for each score. Defaults 500, 30.}
 
 \item{balance}{If \code{TRUE}, lowers the sensitivity percentile cutoff by 0.2 (see \code{networkGen::sens_top()}).}
 

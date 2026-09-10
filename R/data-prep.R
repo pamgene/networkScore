@@ -48,20 +48,32 @@ clean_uka_to_kinograte_full <- function(uka, spec_cutoff, control, cs = NULL) {
 
 #' Clean a raw UKA table for the kinase-only analysis, keyed by condition
 #'
+#' The kinase-only counterpart of `networkGen::clean_uka_to_kinograte()`:
+#' same reduction of a raw Tercen UKA export to the shape the grid builder
+#' consumes, differing only in which raw column identifies each condition
+#' (`condition_col`).
+#'
 #' @param uka Raw UKA data frame, Tercen-style dotted column names.
 #' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
 #'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
+#' @param condition_col Name of the raw column identifying each condition/
+#'   comparison, carried through unchanged to the output. This is the same
+#'   role `Sgroup_contrast` plays in `networkGen::clean_uka_to_kinograte()`;
+#'   different Tercen exports name it differently (`"Sgroup_contrast"`,
+#'   `"Sample"`, ...). Default `"Sgroup_contrast"`. Must match the
+#'   `condition_col` passed to `networkGen::build_network_grid()`.
 #'
-#' @return Data frame with columns `Sample`, `uniprotname`, `LogFC`, `fscore`.
+#' @return Data frame with columns `<condition_col>`, `uniprotname`,
+#'   `LogFC`, `fscore`.
 #' @export
-clean_uka_to_kinograte_kinase <- function(uka, cs = NULL) {
+clean_uka_to_kinograte_kinase <- function(uka, cs = NULL, condition_col = "Sgroup_contrast") {
   if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
   stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
 
   uka %>%
     networkGen::clean_tercen_columns() %>%
-    dplyr::select("Sample", "Kinase Name", dplyr::all_of(stat_col), dplyr::all_of(finalscore_col)) %>%
+    dplyr::select(dplyr::all_of(condition_col), "Kinase Name", dplyr::all_of(stat_col), dplyr::all_of(finalscore_col)) %>%
     dplyr::rename(
       "uniprotname" = "Kinase Name", "LogFC" = dplyr::all_of(stat_col),
       "fscore" = dplyr::all_of(finalscore_col)
