@@ -36,7 +36,7 @@ network (\code{nodes_*.csv}/\code{edges_*.csv}/\code{wc_df_*.csv}, not permutati
 networks) all land there.}
 
 \item{ppi_network}{A data frame with columns \code{head}, \code{tail}, \code{cost}, or a
-fully named list of them (e.g. \code{list(v12_5 = ppi_network_human_filtered_v12.5, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
+fully named list of them (e.g. \code{list(v12_5 = string_12.5, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
 network.}
 
 \item{nperms_network}{Number of permutations per condition. Default 30.}
