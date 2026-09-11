@@ -208,7 +208,7 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   network (`nodes_*.csv`/`edges_*.csv`/`wc_df_*.csv`, not permutation
 #'   networks) all land there.
 #' @param ppi_network A data frame with columns `head`, `tail`, `cost`, or a
-#'   fully named list of them (e.g. `list(v12 = ppi_networkv12, kins502 =
+#'   fully named list of them (e.g. `list(v12_5 = ppi_network_human_filtered_v12.5, kins502 =
 #'   ppi_networkv12_502_kins)`) to also grid across more than one reference
 #'   network.
 #' @param nperms_network Number of permutations per condition. Default 30.
@@ -358,7 +358,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #'   all land there.
 #' @param uka_fam Kinase-family lookup table (`Kinase_Name`, `Kinase_family`), for overlap scoring.
 #' @param ppi_network A data frame with columns `head`, `tail`, `cost`, or a
-#'   fully named list of them (e.g. `list(v12 = ppi_networkv12, kins502 =
+#'   fully named list of them (e.g. `list(v12_5 = ppi_network_human_filtered_v12.5, kins502 =
 #'   ppi_networkv12_502_kins)`) to also grid across more than one reference
 #'   network.
 #' @param del_cells Optional character vector of cell lines to exclude.

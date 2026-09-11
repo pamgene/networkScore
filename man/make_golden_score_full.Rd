@@ -51,7 +51,7 @@ all land there.}
 \item{uka_fam}{Kinase-family lookup table (\code{Kinase_Name}, \code{Kinase_family}), for overlap scoring.}
 
 \item{ppi_network}{A data frame with columns \code{head}, \code{tail}, \code{cost}, or a
-fully named list of them (e.g. \code{list(v12 = ppi_networkv12, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
+fully named list of them (e.g. \code{list(v12_5 = ppi_network_human_filtered_v12.5, kins502 = ppi_networkv12_502_kins)}) to also grid across more than one reference
 network.}
 
 \item{del_cells}{Optional character vector of cell lines to exclude.}

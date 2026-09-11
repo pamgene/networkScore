@@ -30,11 +30,12 @@ library(networkScore)
 
 Raw UKA (kinase-activity) data, Tercen-style dotted column names, two
 conditions, 8 real genes sampled from the bundled `ppi_networkv12_502_kins`
-(the smallest of the three bundled reference networks -- 502 kinases,
-~107K edges, vs. 1.1M for the full `ppi_networkv12` -- good enough for a
-kinase-activity network and much faster for an example). The condition
-column here is `Sgroup_contrast` (the default); an export that names it
-differently is handled by passing `comparison_col`:
+(the smaller of `networkGen`'s two bundled reference networks -- 502
+kinases, ~107K edges, vs. ~1.2M for the full default
+`ppi_network_human_filtered_v12.5` -- good enough for a kinase-activity
+network and much faster for an example). The condition column here is
+`Sgroup_contrast` (the default); an export that names it differently is
+handled by passing `comparison_col`:
 
 ```{r toy-uka}
 set.seed(1)
