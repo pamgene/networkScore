@@ -212,8 +212,6 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   ppi_networkv12_502_kins)`) to also grid across more than one reference
 #'   network.
 #' @param nperms_network Number of permutations per condition. Default 30.
-#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
-#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #' @param comparison_col Name of the raw UKA column identifying each
 #'   comparison, passed through to `networkGen::prep_uka()` and
 #'   `networkGen::build_network_grid()`. Different Tercen exports name it
@@ -236,7 +234,7 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b = 2, w = 2, nperms_network = 30,
-                                      rank_uka_abs = TRUE, cs = NULL,
+                                      rank_uka_abs = TRUE,
                                       comparison_col = "Sgroup_contrast", max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
@@ -245,10 +243,8 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
   uka_label <- rlang::as_label(rlang::enquo(uka))
   ppi_network_label <- rlang::as_label(rlang::enquo(ppi_network))
 
-  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
-
   grid <- networkGen::build_network_grid(
-    uka, clean_fn = function(x) networkGen::prep_uka(x, cs = cs, comparison_col = comparison_col),
+    uka, clean_fn = function(x) networkGen::prep_uka(x, comparison_col = comparison_col),
     comparison_col = comparison_col,
     spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
     ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label)
@@ -272,7 +268,7 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 
   combos <- networkGen::prepare_grid_folders(
     grid, prepare_fn = prepare_score_run_params, base_labels = list(uka = uka_label),
-    respath = respath, uka = uka, nperms_network = nperms_network, cs = cs
+    respath = respath, uka = uka, nperms_network = nperms_network
   )
 
   all_results <- list()
@@ -370,8 +366,6 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
 #'   (fields left `NA`). Both default `TRUE`.
 #' @param nperms_overlap,nperms_network Number of permutations for each score. Defaults 500, 30.
 #' @param balance If `TRUE`, lowers the sensitivity percentile cutoff by 0.2 (see `networkGen::sens_top()`).
-#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
-#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
 #' @param max_tasks Refuse to proceed (`stop()`, without building anything)
 #'   if the grid, with permutations, expands to more than this many PCSF
 #'   builds -- a safety guard against an unintentionally huge overnight run,
@@ -394,14 +388,12 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
                                     ppi_network, b = 2, w = 2, del_cells = NULL, zscore = FALSE,
                                     best_drug_per_target = NULL, score_overlap = TRUE, score_network = TRUE,
                                     nperms_overlap = 500, nperms_network = 30,
-                                    rank_uka_abs = TRUE, balance = FALSE, cs = NULL, max_tasks = 500, ...) {
+                                    rank_uka_abs = TRUE, balance = FALSE, max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # see networkGen::run_network_grid() for why this must happen first.
   uka_label <- rlang::as_label(rlang::enquo(uka))
   sens_label <- rlang::as_label(rlang::enquo(sens))
   ppi_network_label <- rlang::as_label(rlang::enquo(ppi_network))
-
-  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
 
   sens_parsed <- prep_sens(sens, control = control, zscore = zscore, best_drug_per_target = best_drug_per_target)
 
@@ -409,7 +401,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
   # pre-filter -- uka_top() (inside build_network_grid()) does the real
   # per-cell spec_cutoff filtering instead, since spec_cutoff is now
   # gridded rather than fixed at cleaning time.
-  clean_fn <- function(x) prep_uka_paired(x, spec_cutoff = -Inf, control = control, cs = cs)
+  clean_fn <- function(x) prep_uka_paired(x, spec_cutoff = -Inf, control = control)
   grid <- networkGen::build_network_grid(
     uka, clean_fn = clean_fn, comparison_col = "cell_line",
     spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
@@ -438,7 +430,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
 
   combos <- networkGen::prepare_grid_folders(
     grid, prepare_fn = prepare_score_run_params, base_labels = list(uka = uka_label, sens = sens_label),
-    respath = respath, uka = uka, sens = sens, nperms_network = nperms_network, cs = cs
+    respath = respath, uka = uka, sens = sens, nperms_network = nperms_network
   )
 
   all_results <- list()

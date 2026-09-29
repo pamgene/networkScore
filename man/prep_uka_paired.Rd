@@ -4,7 +4,7 @@
 \alias{prep_uka_paired}
 \title{Reshape a raw UKA table for the paired (golden) analysis, keyed by cell line}
 \usage{
-prep_uka_paired(uka, spec_cutoff, control, cs = NULL)
+prep_uka_paired(uka, spec_cutoff, control)
 }
 \arguments{
 \item{uka}{Raw UKA data frame, Tercen-style dotted column names.}
@@ -13,10 +13,10 @@ prep_uka_paired(uka, spec_cutoff, control, cs = NULL)
 
 \item{control}{Name of the control condition as it appears in \code{contrast}
 (e.g. \code{"DMSO"}). Set this to whichever side of every comparison is the
-reference; the other side becomes \code{cell_line}.}
+reference; the other side becomes \code{cell_line}.
 
-\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
-columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
+Per-comparison (csUKA) vs. mean/median score columns are detected from
+the columns present, via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 }
 \value{
 Data frame with columns \code{cell_line}, \code{comparison} (the full,

@@ -1,4 +1,4 @@
-test_that("prep_uka_paired auto-detects csUKA columns when cs is NULL (default)", {
+test_that("prep_uka_paired auto-detects csUKA columns", {
   cs_full <- data.frame(
     `x.contrast` = "Treated vs Control", `x.Kinase Name` = "K1",
     `x.Kinase Statistic` = 1.0, `x.Specificity Score` = 2.0,
@@ -17,7 +17,7 @@ test_that("prep_uka_paired flips sign when control is on the left of the contras
     `x.Mean Specificity Score` = c(2.0, 2.0),
     check.names = FALSE
   )
-  res <- prep_uka_paired(uka, spec_cutoff = 0, control = "Control", cs = FALSE)
+  res <- prep_uka_paired(uka, spec_cutoff = 0, control = "Control")
 
   expect_equal(res$LogFC[res$cell_line == "Treated"], -1.0) # control on left -> sign flipped
   expect_equal(res$LogFC[res$cell_line == "Treated2"], 1.0) # control on right -> unchanged
@@ -31,7 +31,7 @@ test_that("prep_uka_paired keeps only comparisons that involve the control", {
     `x.Mean Specificity Score` = c(2.0, 2.0, 2.0),
     check.names = FALSE
   )
-  res <- prep_uka_paired(uka, spec_cutoff = 0, control = "DMSO", cs = FALSE)
+  res <- prep_uka_paired(uka, spec_cutoff = 0, control = "DMSO")
   expect_setequal(res$cell_line, c("DrugA", "DrugD")) # "DrugB vs DrugC" dropped
 })
 

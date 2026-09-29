@@ -24,7 +24,6 @@ make_golden_score_full(
   nperms_network = 30,
   rank_uka_abs = TRUE,
   balance = FALSE,
-  cs = NULL,
   max_tasks = 500,
   ...
 )
@@ -68,9 +67,6 @@ one drug per target.}
 \item{nperms_overlap, nperms_network}{Number of permutations for each score. Defaults 500, 30.}
 
 \item{balance}{If \code{TRUE}, lowers the sensitivity percentile cutoff by 0.2 (see \code{networkGen::sens_top()}).}
-
-\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
-columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 
 \item{max_tasks}{Refuse to proceed (\code{stop()}, without building anything)
 if the grid, with permutations, expands to more than this many PCSF

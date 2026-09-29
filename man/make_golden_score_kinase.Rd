@@ -14,7 +14,6 @@ make_golden_score_kinase(
   w = 2,
   nperms_network = 30,
   rank_uka_abs = TRUE,
-  cs = NULL,
   comparison_col = "Sgroup_contrast",
   max_tasks = 500,
   ...
@@ -40,9 +39,6 @@ fully named list of them (e.g. \code{list(v12_5 = string_12.5, kins502 = ppi_net
 network.}
 
 \item{nperms_network}{Number of permutations per condition. Default 30.}
-
-\item{cs}{\code{TRUE}/\code{FALSE} to force per-comparison (csUKA) vs. mean/median
-columns; \code{NULL} (default) auto-detects via \code{\link[networkGen:detect_csuka]{networkGen::detect_csuka()}}.}
 
 \item{comparison_col}{Name of the raw UKA column identifying each
 comparison, passed through to \code{networkGen::prep_uka()} and

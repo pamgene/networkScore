@@ -13,8 +13,9 @@
 #' @param control Name of the control condition as it appears in `contrast`
 #'   (e.g. `"DMSO"`). Set this to whichever side of every comparison is the
 #'   reference; the other side becomes `cell_line`.
-#' @param cs `TRUE`/`FALSE` to force per-comparison (csUKA) vs. mean/median
-#'   columns; `NULL` (default) auto-detects via [networkGen::detect_csuka()].
+#'
+#' Per-comparison (csUKA) vs. mean/median score columns are detected from
+#' the columns present, via [networkGen::detect_csuka()].
 #'
 #' @return Data frame with columns `cell_line`, `comparison` (the full,
 #'   untruncated "X vs control"/"control vs X" label -- `cell_line` itself
@@ -22,8 +23,8 @@
 #'   sensitivity data's own cell-line identifier, not shown to the user),
 #'   `uniprotname`, `LogFC`, `fscore`.
 #' @export
-prep_uka_paired <- function(uka, spec_cutoff, control, cs = NULL) {
-  if (is.null(cs)) cs <- networkGen::detect_csuka(uka)
+prep_uka_paired <- function(uka, spec_cutoff, control) {
+  cs <- networkGen::detect_csuka(uka)
   finalscore_col <- if (cs) "Specificity Score" else "Mean Specificity Score"
   stat_col <- if (cs) "Kinase Statistic" else "Median Kinase Statistic"
 

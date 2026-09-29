@@ -72,7 +72,7 @@ test_that("make_golden_score_full batches all cells' network-score builds into a
   )
 
   local_mocked_bindings(
-    prep_uka_paired = function(uka, spec_cutoff, control, cs = FALSE) cleaned_uka,
+    prep_uka_paired = function(uka, spec_cutoff, control) cleaned_uka,
     prep_sens = function(sens, control, zscore = FALSE, del_cell = NULL, best_drug_per_target = NULL) cleaned_sens,
     .package = "networkScore"
   )
