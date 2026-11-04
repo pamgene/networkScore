@@ -14,6 +14,7 @@ make_golden_score_kinase(
   w = 2,
   nperms_network = 30,
   rank_uka_abs = TRUE,
+  top_n = NA,
   comparison_col = "Sgroup_contrast",
   max_tasks = 500,
   ...
@@ -39,6 +40,13 @@ fully named list of them (e.g. \code{list(v12_5 = string_12.5, kins502 = ppi_net
 network.}
 
 \item{nperms_network}{Number of permutations per condition. Default 30.}
+
+\item{top_n}{Vector, gridded like the cutoffs: keep only the \code{top_n}
+highest-specificity kinases (see \code{\link[networkGen:uka_top]{networkGen::uka_top()}}), in the observed
+network and in every permutation, so every network of a condition has
+exactly \code{top_n} terminal kinases. Default \code{NA} (off; folders, keys and
+\code{results.csv} columns then stay as before \code{top_n} existed). Typically
+used with \code{spec_cutoff = 0}, \code{perc_cutoff = 0}.}
 
 \item{comparison_col}{Name of the raw UKA column identifying each
 comparison, passed through to \code{networkGen::prep_uka()} and

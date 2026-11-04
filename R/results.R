@@ -41,7 +41,7 @@ initialize_or_read_df <- function(respath, dfname) {
 #' @return `results`, with any of `grid_cols` removed if it has at most one
 #'   distinct (non-missing) value across all rows.
 #' @export
-drop_constant_grid_columns <- function(results, grid_cols = c("spec_cutoff", "perc_cutoff", "b", "w", "rank_uka_abs", "ppi_network")) {
+drop_constant_grid_columns <- function(results, grid_cols = c("spec_cutoff", "perc_cutoff", "top_n", "b", "w", "rank_uka_abs", "ppi_network")) {
   constant <- vapply(grid_cols, function(col) {
     if (!col %in% colnames(results)) {
       return(FALSE)

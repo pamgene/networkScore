@@ -6,7 +6,8 @@
 \usage{
 drop_constant_grid_columns(
   results,
-  grid_cols = c("spec_cutoff", "perc_cutoff", "b", "w", "rank_uka_abs", "ppi_network")
+  grid_cols = c("spec_cutoff", "perc_cutoff", "top_n", "b", "w", "rank_uka_abs",
+    "ppi_network")
 )
 }
 \arguments{

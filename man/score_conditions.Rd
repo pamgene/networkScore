@@ -44,8 +44,9 @@ serializes a fresh multi-MB copy per task to every \code{future} worker
 \item{generate_fn}{\code{networkGen::generate_paired_network} or
 \code{networkGen::generate_kinase_network}.}
 
-\item{uka_top_fn}{Function \verb{(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff) -> uka_filt}
-used to re-filter each permutation's shuffled input -- both kinase-only
+\item{uka_top_fn}{Function \verb{(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff, top_n) -> uka_filt}
+used to re-filter each permutation's shuffled input (\code{top_n} is the
+spec's own \code{top_n}, \code{NA} when it has none) -- both kinase-only
 and paired paths use \code{networkGen::uka_top()} here, since by this point
 the input has already been cleaned to a common \code{fscore} column.}
 

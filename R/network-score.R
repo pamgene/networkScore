@@ -37,8 +37,9 @@
 #' @param nPerms Number of permutations per cell.
 #' @param generate_fn `networkGen::generate_paired_network` or
 #'   `networkGen::generate_kinase_network`.
-#' @param uka_top_fn Function `(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff) -> uka_filt`
-#'   used to re-filter each permutation's shuffled input -- both kinase-only
+#' @param uka_top_fn Function `(uka_cell_all, spec_cutoff, rank_uka_abs, perc_cutoff, top_n) -> uka_filt`
+#'   used to re-filter each permutation's shuffled input (`top_n` is the
+#'   spec's own `top_n`, `NA` when it has none) -- both kinase-only
 #'   and paired paths use `networkGen::uka_top()` here, since by this point
 #'   the input has already been cleaned to a common `fscore` column.
 #' @param paired If `TRUE`, every task also carries `sens = spec$sens_filt`.
@@ -80,7 +81,10 @@ score_conditions <- function(condition_specs, nPerms, generate_fn, uka_top_fn, p
     for (i in seq_len(nPerms)) {
       shuffled <- spec$uka_cell_all
       shuffled$uniprotname <- sample(shuffled$uniprotname)
-      uka_filt_random <- uka_top_fn(shuffled, spec_cutoff = spec$spec_cutoff, rank_uka_abs = spec$rank_uka_abs, perc_cutoff = spec$perc_cutoff)
+      uka_filt_random <- uka_top_fn(
+        shuffled, spec_cutoff = spec$spec_cutoff, rank_uka_abs = spec$rank_uka_abs, perc_cutoff = spec$perc_cutoff,
+        top_n = if (is.null(spec$top_n)) NA else spec$top_n
+      )
       tasks[[length(tasks) + 1]] <- list(
         args = build_args(uka_filt_random, spec, role = "permutation"),
         meta = list(cell_key = spec$cell_key, condition = spec$condition, spec_cutoff = spec$spec_cutoff, perc_cutoff = spec$perc_cutoff, role = "permutation", perm_index = i)
@@ -201,6 +205,12 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   combination is scored, not just the ones a particular caller happens to
 #'   compare. `b`/`w` are the PCSF cost knobs (see
 #'   [networkGen::generate_kinase_network()]); both default 2.
+#' @param top_n Vector, gridded like the cutoffs: keep only the `top_n`
+#'   highest-specificity kinases (see [networkGen::uka_top()]), in the observed
+#'   network and in every permutation, so every network of a condition has
+#'   exactly `top_n` terminal kinases. Default `NA` (off; folders, keys and
+#'   `results.csv` columns then stay as before `top_n` existed). Typically
+#'   used with `spec_cutoff = 0`, `perc_cutoff = 0`.
 #' @param respath Base output directory. Each combination gets its own
 #'   parameter-encoded subfolder under it (see [prepare_score_run_params()])
 #'   -- `results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`,
@@ -234,7 +244,7 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b = 2, w = 2, nperms_network = 30,
-                                      rank_uka_abs = TRUE,
+                                      rank_uka_abs = TRUE, top_n = NA,
                                       comparison_col = "Sgroup_contrast", max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
@@ -247,13 +257,13 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
     uka, clean_fn = function(x) networkGen::prep_uka(x, comparison_col = comparison_col),
     comparison_col = comparison_col,
     spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
-    ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label)
+    ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label), top_n = top_n
   )
   grid <- purrr::map(grid, function(cell) {
-    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$b, cell$w, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
+    cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$top_n, cell$b, cell$w, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")
     cell
   })
-  cat("Grid has", length(grid), "condition x spec_cutoff x perc_cutoff x b x w x rank_uka_abs x ppi_network cells\n")
+  cat("Grid has", length(grid), "condition x spec_cutoff x perc_cutoff x top_n x b x w x rank_uka_abs x ppi_network cells\n")
 
   total_tasks <- length(grid) * (1 + nperms_network)
   if (total_tasks > max_tasks) {
@@ -292,12 +302,15 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
       condition_specs <- purrr::map(todo_cells, function(cell) {
         list(
           cell_key = cell$cell_key, condition = cell$condition, spec_cutoff = cell$spec_cutoff,
-          perc_cutoff = cell$perc_cutoff, b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
+          perc_cutoff = cell$perc_cutoff, top_n = cell$top_n, b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network,
           uka_filt = cell$uka_filt, uka_cell_all = cell$uka_cell_all, sens_filt = NULL, respath = folder,
-          vals_extra = list(
-            Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff,
-            b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
-            n_kins = nrow(cell$uka_filt)
+          vals_extra = c(
+            list(Comparison = cell$condition, spec_cutoff = cell$spec_cutoff, perc_cutoff = cell$perc_cutoff),
+            if (!is.na(cell$top_n)) list(top_n = cell$top_n),
+            list(
+              b = cell$b, w = cell$w, rank_uka_abs = cell$rank_uka_abs, ppi_network = cell$ppi_network_name,
+              n_kins = nrow(cell$uka_filt)
+            )
           )
         )
       })
@@ -305,8 +318,8 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
       cond_results <- score_conditions(
         condition_specs, nPerms = nperms_network,
         generate_fn = networkGen::generate_kinase_network,
-        uka_top_fn = function(x, spec_cutoff, rank_uka_abs, perc_cutoff) {
-          networkGen::uka_top(x, spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff)
+        uka_top_fn = function(x, spec_cutoff, rank_uka_abs, perc_cutoff, top_n) {
+          networkGen::uka_top(x, spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff, top_n = top_n)
         },
         paired = FALSE, ...
       )
@@ -468,7 +481,7 @@ make_golden_score_full <- function(uka, sens, control, spec_cutoff, perc_cutoff,
         cond_results <- score_conditions(
           condition_specs, nPerms = nperms_network,
           generate_fn = networkGen::generate_paired_network,
-          uka_top_fn = function(x, spec_cutoff, rank_uka_abs, perc_cutoff) networkGen::uka_top(x, spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff),
+          uka_top_fn = function(x, spec_cutoff, rank_uka_abs, perc_cutoff, top_n) networkGen::uka_top(x, spec_cutoff = spec_cutoff, rank_uka_abs = rank_uka_abs, perc_cutoff = perc_cutoff, top_n = top_n),
           paired = TRUE, ...
         )
         stats::setNames(cond_results, purrr::map_chr(todo_cells, "cell_key"))

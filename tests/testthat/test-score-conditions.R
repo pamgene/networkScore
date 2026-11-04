@@ -14,7 +14,7 @@ mock_generate_fn <- function(uka, condition, spec_cutoff, b, w = NULL, ppi_netwo
   ), class = "networkGen_result")
 }
 
-mock_uka_top_fn <- function(x, spec_cutoff, rank_uka_abs, perc_cutoff) {
+mock_uka_top_fn <- function(x, spec_cutoff, rank_uka_abs, perc_cutoff, top_n = NA) {
   data.frame(uniprotname = x$uniprotname, prize = 0) # always "loose", regardless of shuffle
 }
 
@@ -176,4 +176,19 @@ test_that("score_conditions includes sens in build args when paired = TRUE", {
 
   expect_true(length(captured_args) >= 1)
   expect_equal(captured_args[[1]], spec$sens_filt)
+})
+
+test_that("score_conditions re-filters every permutation with the spec's own top_n (NA when the spec has none)", {
+  seen <- list()
+  capturing_uka_top_fn <- function(x, spec_cutoff, rank_uka_abs, perc_cutoff, top_n) {
+    seen[[length(seen) + 1]] <<- top_n
+    data.frame(uniprotname = utils::head(x$uniprotname, if (is.na(top_n)) nrow(x) else top_n), prize = 0)
+  }
+  with_top_n <- make_spec("cond_A")
+  with_top_n$top_n <- 3
+  score_conditions(
+    list(with_top_n, make_spec("cond_B")), nPerms = 2,
+    generate_fn = mock_generate_fn, uka_top_fn = capturing_uka_top_fn, paired = FALSE
+  )
+  expect_equal(unlist(seen), c(3, 3, NA, NA))
 })
