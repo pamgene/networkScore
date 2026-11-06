@@ -210,7 +210,14 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #'   network and in every permutation, so every network of a condition has
 #'   exactly `top_n` terminal kinases. Default `NA` (off; folders, keys and
 #'   `results.csv` columns then stay as before `top_n` existed). Typically
-#'   used with `spec_cutoff = 0`, `perc_cutoff = 0`.
+#'   used with `spec_cutoff = 0`, `perc_cutoff = 0`. A NAMED vector (names =
+#'   the `comparison_col` values) gives each condition its own N instead
+#'   (see [networkGen::build_network_grid()]): every condition's rows land in
+#'   one `top<top_n_label>` folder, and its `results.csv` row carries its own
+#'   `top_n`.
+#' @param top_n_label Folder label for a named (per-condition) `top_n`;
+#'   required then, ignored otherwise. Rows are resumed by `Comparison` from
+#'   that folder, so a label must always stand for the same N per condition.
 #' @param respath Base output directory. Each combination gets its own
 #'   parameter-encoded subfolder under it (see [prepare_score_run_params()])
 #'   -- `results.csv`, `metrics_permutations.csv`, `metrics_observed.csv`,
@@ -244,7 +251,7 @@ make_golden_score <- function(uka, sens = NULL, ...) {
 #' @export
 make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
                                       ppi_network, b = 2, w = 2, nperms_network = 30,
-                                      rank_uka_abs = TRUE, top_n = NA,
+                                      rank_uka_abs = TRUE, top_n = NA, top_n_label = NULL,
                                       comparison_col = "Sgroup_contrast", max_tasks = 500, ...) {
   # Captured immediately, before anything else forces these arguments --
   # forcing a promise before enquo() silently degrades the captured label
@@ -257,7 +264,8 @@ make_golden_score_kinase <- function(uka, spec_cutoff, perc_cutoff, respath,
     uka, clean_fn = function(x) networkGen::prep_uka(x, comparison_col = comparison_col),
     comparison_col = comparison_col,
     spec_cutoff = spec_cutoff, perc_cutoff = perc_cutoff, b = b, w = w, rank_uka_abs = rank_uka_abs,
-    ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label), top_n = top_n
+    ppi_network = networkGen::normalize_ppi_network_list(ppi_network, ppi_network_label), top_n = top_n,
+    top_n_label = top_n_label
   )
   grid <- purrr::map(grid, function(cell) {
     cell$cell_key <- paste(cell$condition, cell$spec_cutoff, cell$perc_cutoff, cell$top_n, cell$b, cell$w, cell$rank_uka_abs, cell$ppi_network_name, sep = "||")

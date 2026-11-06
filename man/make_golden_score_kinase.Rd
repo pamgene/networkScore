@@ -15,6 +15,7 @@ make_golden_score_kinase(
   nperms_network = 30,
   rank_uka_abs = TRUE,
   top_n = NA,
+  top_n_label = NULL,
   comparison_col = "Sgroup_contrast",
   max_tasks = 500,
   ...
@@ -46,7 +47,15 @@ highest-specificity kinases (see \code{\link[networkGen:uka_top]{networkGen::uka
 network and in every permutation, so every network of a condition has
 exactly \code{top_n} terminal kinases. Default \code{NA} (off; folders, keys and
 \code{results.csv} columns then stay as before \code{top_n} existed). Typically
-used with \code{spec_cutoff = 0}, \code{perc_cutoff = 0}.}
+used with \code{spec_cutoff = 0}, \code{perc_cutoff = 0}. A NAMED vector (names =
+the \code{comparison_col} values) gives each condition its own N instead
+(see \code{\link[networkGen:build_network_grid]{networkGen::build_network_grid()}}): every condition's rows land in
+one \verb{top<top_n_label>} folder, and its \code{results.csv} row carries its own
+\code{top_n}.}
+
+\item{top_n_label}{Folder label for a named (per-condition) \code{top_n};
+required then, ignored otherwise. Rows are resumed by \code{Comparison} from
+that folder, so a label must always stand for the same N per condition.}
 
 \item{comparison_col}{Name of the raw UKA column identifying each
 comparison, passed through to \code{networkGen::prep_uka()} and

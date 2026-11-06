@@ -180,3 +180,46 @@ test_that("make_golden_score_kinase refuses to proceed when the grid (with permu
     "max_tasks"
   )
 })
+
+test_that("make_golden_score_kinase with a named top_n builds each condition (observed and permutations) at its own N, in one folder", {
+  sizes <- list()
+  local_mocked_bindings(
+    generate_kinase_network = function(uka, condition, spec_cutoff, b, w = NULL, ppi_network = NULL, write, res.path = NULL, ...) {
+      sizes[[length(sizes) + 1]] <<- data.frame(condition = condition, n = nrow(uka))
+      structure(list(
+        network = igraph::graph_from_data_frame(data.frame(from = "K1", to = "K2"), directed = FALSE),
+        missing_nodes = NULL
+      ), class = "networkGen_result")
+    },
+    .package = "networkGen"
+  )
+
+  uka <- data.frame(
+    `x.Sgroup_contrast` = rep(c("cond_A", "cond_B"), each = 4),
+    `x.Kinase Name` = paste0("K", 1:8),
+    `x.Median Kinase Statistic` = c(2, -1.5, 0.3, 1, 2, -1.5, 0.3, 1),
+    `x.Mean Specificity Score` = c(4, 3, 2, 1, 4, 3, 2, 1),
+    check.names = FALSE
+  )
+  respath <- file.path(tempdir(), "integration_kinase_top_n_per_condition_test")
+  unlink(respath, recursive = TRUE)
+  dir.create(respath)
+  fake_ppi <- data.frame(head = "A", tail = "B", cost = 0.1)
+
+  result <- make_golden_score_kinase(
+    uka = uka, spec_cutoff = 0, perc_cutoff = 0, respath = respath, ppi_network = fake_ppi,
+    b = 1, nperms_network = 3, top_n = c(cond_A = 1, cond_B = 3), top_n_label = "min-x-y"
+  )
+
+  result_files <- list.files(respath, pattern = "^results[.]csv$", recursive = TRUE, full.names = TRUE)
+  expect_length(result_files, 1)
+  expect_match(basename(dirname(result_files)), "^topmin-x-y_")
+  res <- result$results[order(result$results$Comparison), ]
+  expect_equal(res$top_n, c(1, 3))
+  expect_equal(res$n_kins, c(1, 3))
+  # observed network and all 3 permutations of each condition get exactly that condition's N kinases
+  sizes <- do.call(rbind, sizes)
+  expect_equal(as.vector(table(sizes$condition)), c(4, 4))
+  expect_true(all(sizes$n[sizes$condition == "cond_A"] == 1))
+  expect_true(all(sizes$n[sizes$condition == "cond_B"] == 3))
+})
